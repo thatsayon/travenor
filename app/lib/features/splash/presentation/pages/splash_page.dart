@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:app/core/utils/app_storage.dart';
 import 'package:flutter/material.dart';
 import '../../../../app/routes.dart';
 
@@ -25,11 +26,14 @@ class _SplashPageState extends State<SplashPage> {
     _timer = Timer(const Duration(seconds: 2), _navigate);
   }
 
-  void _navigate() {
+  void _navigate() async {
+    final isFirstLaunch = await AppStorage().isFirstLaunch();
+
     if (!mounted) return;
 
-    Navigator.of(context).pushReplacementNamed(
-      AppRoutes.login,
+    Navigator.pushReplacementNamed(
+      context,
+      isFirstLaunch ? AppRoutes.onboarding : AppRoutes.login,
     );
   }
 
