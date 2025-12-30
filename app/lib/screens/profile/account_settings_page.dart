@@ -6,6 +6,8 @@ import '../../providers/auth_provider.dart';
 import '../../services/profile_service.dart';
 import '../../services/booking_service.dart';
 import '../../routes/app_routes.dart';
+import 'privacy_policy_page.dart';
+import 'terms_of_service_page.dart';
 
 class AccountSettingsPage extends ConsumerWidget {
   const AccountSettingsPage({super.key});
@@ -216,23 +218,15 @@ class AccountSettingsPage extends ConsumerWidget {
 
           _buildSettingItem(
             context,
-            icon: Icons.download_outlined,
-            title: 'Export My Data',
-            subtitle: 'Download a copy of your data',
-            onTap: () => _exportData(context),
-          ),
-
-          const SizedBox(height: 8),
-
-          _buildSettingItem(
-            context,
             icon: Icons.privacy_tip_outlined,
             title: 'Privacy Policy',
             subtitle: 'Read our privacy policy',
             onTap: () {
-              // In production, open privacy policy URL
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Privacy policy would open here')),
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const PrivacyPolicyPage(),
+                ),
               );
             },
           ),
@@ -245,9 +239,11 @@ class AccountSettingsPage extends ConsumerWidget {
             title: 'Terms of Service',
             subtitle: 'Read our terms of service',
             onTap: () {
-              // In production, open terms URL
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Terms of service would open here')),
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const TermsOfServicePage(),
+                ),
               );
             },
           ),

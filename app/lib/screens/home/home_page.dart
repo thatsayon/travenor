@@ -12,12 +12,13 @@ class HomePage extends StatelessWidget {
     final availableCount = tours.length;
     
     return Scaffold(
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Hero Section
+              // Modern Hero Section
               Container(
                 width: double.infinity,
                 decoration: BoxDecoration(
@@ -30,78 +31,103 @@ class HomePage extends StatelessWidget {
                     end: Alignment.bottomRight,
                   ),
                 ),
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                child: Stack(
                   children: [
-                    Text(
-                      'Explore Bangladesh',
-                      style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                            color: Colors.white,
-                          ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Join curated group tours. Pay small,\ntravel big.',
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                            color: Colors.white.withOpacity(0.9),
-                          ),
-                    ),
-                  ],
-                ),
-              ),
-              
-              const SizedBox(height: 24),
-              
-              // Why Travel With Us
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'WHY TRAVEL WITH US',
-                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                            color: AppTheme.textLight,
-                            letterSpacing: 1.2,
-                          ),
-                    ),
-                    const SizedBox(height: 16),
-                    Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: AppTheme.borderGray),
+                    // Decorative circles
+                    Positioned(
+                      top: -50,
+                      right: -30,
+                      child: Container(
+                        width: 150,
+                        height: 150,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white.withOpacity(0.1),
+                        ),
                       ),
+                    ),
+                    Positioned(
+                      bottom: -20,
+                      left: -40,
+                      child: Container(
+                        width: 100,
+                        height: 100,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white.withOpacity(0.05),
+                        ),
+                      ),
+                    ),
+                    // Content
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 24, 20, 28),
                       child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _buildFeatureItem(
-                            context,
-                            icon: Icons.verified_user_outlined,
-                            title: 'Verified Leads',
-                            description: 'Every guide is\nbackground-checked',
+                          // Badge
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: Colors.white.withOpacity(0.3),
+                                width: 1,
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.explore,
+                                  size: 16,
+                                  color: Colors.white,
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  'Explore Bangladesh',
+                                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                ),
+                              ],
+                            ),
                           ),
-                          const Divider(height: 24),
-                          _buildFeatureItem(
-                            context,
-                            icon: Icons.currency_exchange,
-                            title: 'Refund Guarantee',
-                            description: 'Full refund if trip\ndoesn\'t happen',
+                          
+                          const SizedBox(height: 16),
+                          
+                          // Main title
+                          Text(
+                            'Discover Your\nNext Adventure',
+                            style: Theme.of(context).textTheme.displayMedium?.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w800,
+                                  height: 1.1,
+                                ),
                           ),
-                          const Divider(height: 24),
-                          _buildFeatureItem(
-                            context,
-                            icon: Icons.groups_outlined,
-                            title: 'Fixed Groups',
-                            description: 'No last-minute\nsurprises',
+                          
+                          const SizedBox(height: 12),
+                          
+                          // Subtitle
+                          Text(
+                            'Join verified group tours with guaranteed refunds',
+                            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                  color: Colors.white.withOpacity(0.9),
+                                ),
                           ),
-                          const Divider(height: 24),
-                          _buildFeatureItem(
-                            context,
-                            icon: Icons.calendar_month_outlined,
-                            title: 'Set Schedule',
-                            description: 'Clear timelines &\nitineraries',
+                          
+                          const SizedBox(height: 20),
+                          
+                          // Quick stats in a compact row
+                          Row(
+                            children: [
+                              _buildQuickStat(context, '$availableCount+', 'Tours'),
+                              const SizedBox(width: 24),
+                              _buildQuickStat(context, '100%', 'Verified'),
+                              const SizedBox(width: 24),
+                              _buildQuickStat(context, '24/7', 'Support'),
+                            ],
                           ),
                         ],
                       ),
@@ -110,29 +136,44 @@ class HomePage extends StatelessWidget {
                 ),
               ),
               
-              const SizedBox(height: 32),
+              const SizedBox(height: 28),
               
-              // Upcoming Tours
+              // Upcoming Tours Section
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Text(
-                      'Upcoming Tours',
-                      style: Theme.of(context).textTheme.headlineMedium,
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Upcoming Tours',
+                          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                                fontWeight: FontWeight.w700,
+                              ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'Find your perfect adventure',
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: AppTheme.textLight,
+                              ),
+                        ),
+                      ],
                     ),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
-                        color: AppTheme.primaryTeal.withOpacity(0.1),
+                        color: AppTheme.primaryTeal,
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
-                        '$availableCount available',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: AppTheme.primaryTeal,
-                              fontWeight: FontWeight.w600,
+                        '$availableCount',
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w700,
                             ),
                       ),
                     ),
@@ -149,7 +190,7 @@ class HomePage extends StatelessWidget {
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   itemCount: tours.length,
-                  separatorBuilder: (context, index) => const SizedBox(height: 20),
+                  separatorBuilder: (context, index) => const SizedBox(height: 16),
                   itemBuilder: (context, index) {
                     return TourCard(tour: tours[index]);
                   },
@@ -164,43 +205,22 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  Widget _buildFeatureItem(
-    BuildContext context, {
-    required IconData icon,
-    required String title,
-    required String description,
-  }) {
-    return Row(
+  Widget _buildQuickStat(BuildContext context, String value, String label) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
-          width: 44,
-          height: 44,
-          decoration: BoxDecoration(
-            color: AppTheme.primaryTeal.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Icon(
-            icon,
-            color: AppTheme.primaryTeal,
-            size: 24,
-          ),
+        Text(
+          value,
+          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                color: Colors.white,
+                fontWeight: FontWeight.w800,
+              ),
         ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: Theme.of(context).textTheme.titleMedium,
+        Text(
+          label,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Colors.white.withOpacity(0.8),
               ),
-              const SizedBox(height: 2),
-              Text(
-                description,
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-            ],
-          ),
         ),
       ],
     );

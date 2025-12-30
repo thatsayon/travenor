@@ -4,6 +4,11 @@ import '../../main.dart';
 import '../../providers/auth_provider.dart';
 import '../../routes/app_routes.dart';
 import 'account_settings_page.dart';
+import 'edit_profile_page.dart';
+import 'help_support_page.dart';
+import 'faq_page.dart';
+import 'about_page.dart';
+import 'notification_preferences_page.dart';
 
 class ProfilePage extends ConsumerWidget {
   const ProfilePage({super.key});
@@ -14,38 +19,32 @@ class ProfilePage extends ConsumerWidget {
     final user = authState.user;
     
     return Scaffold(
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header
+              // Simple Profile Header (White Background)
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      AppTheme.primaryTeal,
-                      AppTheme.primaryTealDark,
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
+                padding: const EdgeInsets.fromLTRB(20, 40, 20, 24),
+                decoration: const BoxDecoration(
+                  color: Colors.white,
                 ),
                 child: Column(
                   children: [
                     // Avatar
                     CircleAvatar(
-                      radius: 48,
+                      radius: 50,
+                      backgroundColor: const Color(0xFFFFD6E0), // Pink background
                       backgroundImage: user?.photoUrl != null 
                           ? NetworkImage(user!.photoUrl!)
                           : null,
-                      backgroundColor: Colors.white,
                       child: user?.photoUrl == null
                           ? Icon(
                               Icons.person,
-                              size: 48,
+                              size: 50,
                               color: AppTheme.primaryTeal,
                             )
                           : null,
@@ -56,8 +55,8 @@ class ProfilePage extends ConsumerWidget {
                     // Name
                     Text(
                       user?.name ?? 'Guest User',
-                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                            color: Colors.white,
+                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                            fontWeight: FontWeight.w700,
                           ),
                     ),
                     
@@ -67,14 +66,14 @@ class ProfilePage extends ConsumerWidget {
                     Text(
                       user?.email ?? 'guest@travenor.com',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Colors.white.withOpacity(0.9),
+                            color: AppTheme.textSecondary,
                           ),
                     ),
                   ],
                 ),
               ),
               
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
               
               // Settings options
               Padding(
@@ -97,8 +96,11 @@ class ProfilePage extends ConsumerWidget {
                       title: 'Edit Profile',
                       subtitle: 'Update your personal information',
                       onTap: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Coming soon!')),
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const EditProfilePage(),
+                          ),
                         );
                       },
                     ),
@@ -108,11 +110,14 @@ class ProfilePage extends ConsumerWidget {
                     _buildSettingItem(
                       context,
                       icon: Icons.notifications_outlined,
-                      title: 'Notifications',
-                      subtitle: 'Manage notification preferences',
+                      title: 'Notification Preferences',
+                      subtitle: 'Manage tour and marketing notifications',
                       onTap: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Coming soon!')),
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const NotificationPreferencesPage(),
+                          ),
                         );
                       },
                     ),
@@ -151,29 +156,6 @@ class ProfilePage extends ConsumerWidget {
                     const SizedBox(height: 24),
                     
                     Text(
-                      'PREFERENCES',
-                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                            color: AppTheme.textLight,
-                            letterSpacing: 1.2,
-                          ),
-                    ),
-                    const SizedBox(height: 12),
-                    
-                    _buildSettingItem(
-                      context,
-                      icon: Icons.language_outlined,
-                      title: 'Language',
-                      subtitle: 'English',
-                      onTap: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Coming soon!')),
-                        );
-                      },
-                    ),
-                    
-                    const SizedBox(height: 24),
-                    
-                    Text(
                       'SUPPORT',
                       style: Theme.of(context).textTheme.labelLarge?.copyWith(
                             color: AppTheme.textLight,
@@ -188,8 +170,28 @@ class ProfilePage extends ConsumerWidget {
                       title: 'Help & Support',
                       subtitle: 'Get help or contact us',
                       onTap: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Coming soon!')),
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const HelpSupportPage(),
+                          ),
+                        );
+                      },
+                    ),
+                    
+                    const SizedBox(height: 8),
+                    
+                    _buildSettingItem(
+                      context,
+                      icon: Icons.quiz_outlined,
+                      title: 'Frequently Asked Questions',
+                      subtitle: 'Find answers to common questions',
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const FAQPage(),
+                          ),
                         );
                       },
                     ),
@@ -199,11 +201,14 @@ class ProfilePage extends ConsumerWidget {
                     _buildSettingItem(
                       context,
                       icon: Icons.info_outline,
-                      title: 'About',
-                      subtitle: 'App version 1.0.0',
+                      title: 'About Travenor',
+                      subtitle: 'App version & information',
                       onTap: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Travenor v1.0.0')),
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const AboutPage(),
+                          ),
                         );
                       },
                     ),

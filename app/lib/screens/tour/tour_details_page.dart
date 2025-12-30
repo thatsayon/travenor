@@ -25,15 +25,24 @@ class _TourDetailsPageState extends State<TourDetailsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       body: Stack(
         children: [
-          // Scrollable content
-          SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Header Image
-                _buildHeaderImage(),
+          // White status bar area (matches home page)
+          Container(
+            height: MediaQuery.of(context).padding.top,
+            color: Colors.white,
+          ),
+          
+          // Scrollable content (with top padding for status bar)
+          Padding(
+            padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Header Image (without back button)
+                  _buildHeaderImage(),
                 
                 // Tour Info
                 Padding(
@@ -41,50 +50,6 @@ class _TourDetailsPageState extends State<TourDetailsPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Title
-                      Text(
-                        widget.tour.title,
-                        style: Theme.of(context).textTheme.displaySmall,
-                      ),
-                      
-                      const SizedBox(height: 12),
-                      
-                      // Location and Rating
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.location_on_outlined,
-                            size: 18,
-                            color: AppTheme.textSecondary,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            widget.tour.location,
-                            style: Theme.of(context).textTheme.bodyMedium,
-                          ),
-                          const SizedBox(width: 16),
-                          Icon(
-                            Icons.star,
-                            size: 18,
-                            color: AppTheme.warning,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            '${widget.tour.rating}',
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                  fontWeight: FontWeight.w600,
-                                  color: AppTheme.textPrimary,
-                                ),
-                          ),
-                          Text(
-                            ' (${widget.tour.reviewCount} reviews)',
-                            style: Theme.of(context).textTheme.bodyMedium,
-                          ),
-                        ],
-                      ),
-                      
-                      const SizedBox(height: 24),
-                      
                       // Duration, Transport, Stay Cards
                       Row(
                         children: [
@@ -146,39 +111,13 @@ class _TourDetailsPageState extends State<TourDetailsPage> {
                       // Refund Guarantee
                       _buildRefundGuarantee(),
                       
-                      const SizedBox(height: 100), // Space for bottom bar
+                      const SizedBox(height: 120), // Space for bottom bar
                     ],
                   ),
                 ),
               ],
             ),
           ),
-          
-          // Back button
-          Positioned(
-            top: MediaQuery.of(context).padding.top + 8,
-            left: 16,
-            child: GestureDetector(
-              onTap: () => Navigator.pop(context),
-              child: Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.2),
-                      blurRadius: 8,
-                    ),
-                  ],
-                ),
-                child: const Icon(
-                  Icons.arrow_back_ios_new,
-                  size: 18,
-                ),
-              ),
-            ),
           ),
           
           // Bottom bar
@@ -194,50 +133,142 @@ class _TourDetailsPageState extends State<TourDetailsPage> {
   }
 
   Widget _buildHeaderImage() {
-    return Stack(
-      children: [
-        CachedNetworkImage(
-          imageUrl: widget.tour.imageUrl,
-          width: double.infinity,
-          height: 300,
-          fit: BoxFit.cover,
-          placeholder: (context, url) => Container(
-            height: 300,
-            color: AppTheme.backgroundGray,
-            child: const Center(child: CircularProgressIndicator()),
+    return SizedBox(
+      width: double.infinity,
+      height: 350,
+      child: Stack(
+        children: [
+          // Tour Image
+          CachedNetworkImage(
+            imageUrl: widget.tour.imageUrl,
+            width: double.infinity,
+            height: 350,
+            fit: BoxFit.cover,
+            placeholder: (context, url) => Container(
+              height: 350,
+              color: AppTheme.backgroundGray,
+              child: const Center(child: CircularProgressIndicator()),
+            ),
+            errorWidget: (context, url, error) => Container(
+              height: 350,
+              color: AppTheme.backgroundGray,
+              child: const Icon(Icons.image_not_supported),
+            ),
           ),
-          errorWidget: (context, url, error) => Container(
-            height: 300,
-            color: AppTheme.backgroundGray,
-            child: const Icon(Icons.image_not_supported),
-          ),
-        ),
-        
-        // Badges
-        Positioned(
-          top: MediaQuery.of(context).padding.top + 60,
-          left: 16,
-          right: 16,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              if (widget.tour.isVerifiedLead)
-                CustomBadge(
-                  icon: Icons.verified,
-                  label: 'Verified Lead',
+          
+          // Fog gradient overlay at bottom
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: Container(
+              height: 120,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.transparent,
+                    Colors.white.withOpacity(0.7),
+                    Colors.white,
+                  ],
                 ),
-              if (widget.tour.hasRefundGuarantee)
-                CustomBadge(
-                  icon: Icons.currency_exchange,
-                  label: 'Refund Guaranteed',
-                  backgroundColor: AppTheme.accentOrange,
-                  textColor: Colors.white,
-                  iconColor: Colors.white,
-                ),
-            ],
+              ),
+            ),
           ),
-        ),
-      ],
+          
+          // Title and Location at bottom (on fog)
+          Positioned(
+            bottom: 20,
+            left: 20,
+            right: 20,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  widget.tour.title,
+                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        color: AppTheme.textPrimary,
+                      ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Icon(
+                      Icons.location_on_outlined,
+                      size: 16,
+                      color: AppTheme.textSecondary,
+                    ),
+                    const SizedBox(width: 4),
+                    Expanded(
+                      child: Text(
+                        widget.tour.location,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: AppTheme.textSecondary,
+                            ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Icon(
+                      Icons.star,
+                      size: 16,
+                      color: AppTheme.warning,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      '${widget.tour.rating}',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                    ),
+                    Text(
+                      ' (${widget.tour.reviewCount} reviews)',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: AppTheme.textSecondary,
+                          ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          
+          // Back button overlay
+          Positioned(
+            top: 8,
+            left: 16,
+            child: SafeArea(
+              child: GestureDetector(
+                onTap: () => Navigator.pop(context),
+                child: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.2),
+                        blurRadius: 8,
+                      ),
+                    ],
+                  ),
+                  child: const Icon(
+                    Icons.arrow_back_ios_new,
+                    size: 18,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -739,53 +770,51 @@ class _TourDetailsPageState extends State<TourDetailsPage> {
 
   Widget _buildBottomBar() {
     return Container(
-      padding: EdgeInsets.fromLTRB(20, 16, 20, MediaQuery.of(context).padding.bottom + 16),
+      padding: EdgeInsets.fromLTRB(20, 20, 20, MediaQuery.of(context).padding.bottom + 20),
       decoration: BoxDecoration(
         color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 16,
-            offset: const Offset(0, -4),
+        border: Border(
+          top: BorderSide(
+            color: AppTheme.borderGray,
+            width: 1,
           ),
-        ],
+        ),
       ),
       child: Row(
         children: [
-          Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Reserve with',
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    '৳${widget.tour.price}',
-                    style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                          color: AppTheme.primaryTeal,
-                          fontWeight: FontWeight.w800,
-                        ),
-                  ),
-                ],
-              ),
-            ],
+          Expanded(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '৳${widget.tour.price}',
+                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                        color: AppTheme.primaryTeal,
+                        fontWeight: FontWeight.w800,
+                      ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'per person',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppTheme.textSecondary,
+                      ),
+                ),
+              ],
+            ),
           ),
           const SizedBox(width: 16),
-          Expanded(
+          SizedBox(
+            width: 160,
             child: ElevatedButton(
               onPressed: () async {
-                // Check if profile is complete
                 final profileService = ProfileService();
                 final isComplete = await profileService.isProfileComplete();
                 
                 if (!mounted) return;
                 
                 if (isComplete) {
-                  // Profile complete, get profile and go to booking confirmation
                   final profile = await profileService.getProfile();
                   if (profile != null && mounted) {
                     Navigator.push(
@@ -799,7 +828,6 @@ class _TourDetailsPageState extends State<TourDetailsPage> {
                     );
                   }
                 } else {
-                  // Profile incomplete, go to complete profile page
                   Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -808,7 +836,22 @@ class _TourDetailsPageState extends State<TourDetailsPage> {
                   );
                 }
               },
-              child: const Text('Join This Tour'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primaryTeal,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                elevation: 0,
+              ),
+              child: Text(
+                'Join This Tour',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                    ),
+              ),
             ),
           ),
         ],
