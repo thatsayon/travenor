@@ -13,22 +13,24 @@ class OnboardingButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.symmetric(horizontal: 24),
       child: SizedBox(
         width: double.infinity,
-        height: 56,
+        height: 58,
         child: ElevatedButton(
           onPressed: onTap,
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF2196F3), // Blue color
+            backgroundColor: const Color(0xFF0A6CFF),
             foregroundColor: Colors.white,
-            elevation: 0,
+            elevation: 2,
+            shadowColor: const Color(0xFF0A6CFF).withValues(alpha: 0.3),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
             ),
             textStyle: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
+              fontSize: 17,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.5,
             ),
           ),
           child: Text(isLast ? 'Get Started' : 'Next'),

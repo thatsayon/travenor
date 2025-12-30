@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
 
-// Splash
-import '../features/splash/presentation/pages/splash_page.dart';
-import '../features/onboarding/pages/onboarding_page.dart';
-// Later you will replace these with real pages
-// import '../features/auth/presentation/pages/login_page.dart';
-// import '../features/home/presentation/pages/home_page.dart';
+// Screens
+import '../screens/splash/splash_page.dart';
+import '../screens/onboarding/pages/onboarding_page.dart';
+import '../screens/auth/sign_in_page.dart';
+import '../screens/auth/sign_up_page.dart';
 
 class AppRoutes {
   static const String splash = '/';
   static const String login = '/login';
+  static const String signIn = '/sign-in';
+  static const String signUp = '/sign-up';
   static const String home = '/home';
   static const String onboarding = '/onboarding';
 
@@ -22,10 +23,16 @@ class AppRoutes {
         );
 
       case login:
+      case signIn:
         return MaterialPageRoute(
           settings: settings,
-          builder: (_) =>
-              const Scaffold(body: Center(child: Text('Login Page (TODO)'))),
+          builder: (_) => const SignInPage(),
+        );
+
+      case signUp:
+        return MaterialPageRoute(
+          settings: settings,
+          builder: (_) => const SignUpPage(),
         );
 
       case onboarding:

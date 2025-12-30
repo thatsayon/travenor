@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../../app/routes.dart';
-import '../../../../core/utils/app_storage.dart';
+import '../../../routes/app_routes.dart';
+import '../../../utils/app_storage.dart';
 import '../widgets/onboarding_item.dart';
 import '../widgets/onboarding_indicator.dart';
 import '../widgets/onboarding_button.dart';

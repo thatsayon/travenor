@@ -11,22 +11,24 @@ class OnboardingSkipButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.black.withOpacity(0.35),
-      shape: const StadiumBorder(), // 👈 pill shape
+      color: Colors.black.withValues(alpha: 0.4),
+      shape: const StadiumBorder(),
+      elevation: 1,
       child: InkWell(
         customBorder: const StadiumBorder(),
         onTap: onTap,
         child: const SizedBox(
-          height: 36, // 👈 fixed height
+          height: 38,
           child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: 18), // 👈 controls width
+            padding: EdgeInsets.symmetric(horizontal: 20),
             child: Center(
               child: Text(
                 'Skip',
                 style: TextStyle(
                   color: Colors.white,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.5,
                 ),
               ),
             ),
