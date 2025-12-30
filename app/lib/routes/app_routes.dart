@@ -5,6 +5,7 @@ import '../screens/splash/splash_page.dart';
 import '../screens/onboarding/pages/onboarding_page.dart';
 import '../screens/auth/sign_in_page.dart';
 import '../screens/auth/sign_up_page.dart';
+import '../screens/main_navigation.dart';
 
 class AppRoutes {
   static const String splash = '/';
@@ -44,8 +45,7 @@ class AppRoutes {
       case home:
         return MaterialPageRoute(
           settings: settings,
-          builder: (_) =>
-              const Scaffold(body: Center(child: Text('Home Page (TODO)'))),
+          builder: (_) => const MainNavigation(),
         );
 
       default:

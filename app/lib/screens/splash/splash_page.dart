@@ -1,16 +1,18 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../routes/app_routes.dart';
 import '../../utils/app_storage.dart';
+import '../../services/google_sign_in_service.dart';
 
-class SplashPage extends StatefulWidget {
+class SplashPage extends ConsumerStatefulWidget {
   const SplashPage({super.key});
 
   @override
-  State<SplashPage> createState() => _SplashPageState();
+  ConsumerState<SplashPage> createState() => _SplashPageState();
 }
 
-class _SplashPageState extends State<SplashPage> {
+class _SplashPageState extends ConsumerState<SplashPage> {
   Timer? _timer;
   bool _animateIn = false;
 
@@ -28,13 +30,25 @@ class _SplashPageState extends State<SplashPage> {
 
   void _navigate() async {
     final isFirstLaunch = await AppStorage().isFirstLaunch();
+    final googleSignInService = GoogleSignInService();
+    final isAuthenticated = await googleSignInService.isAuthenticated();
 
     if (!mounted) return;
 
-    Navigator.pushReplacementNamed(
-      context,
-      isFirstLaunch ? AppRoutes.onboarding : AppRoutes.login,
-    );
+    // Determine navigation route
+    String route;
+    if (isAuthenticated) {
+      // User is logged in, go to home
+      route = AppRoutes.home;
+    } else if (isFirstLaunch) {
+      // First time launch, show onboarding
+      route = AppRoutes.onboarding;
+    } else {
+      // Not logged in, show sign in
+      route = AppRoutes.login;
+    }
+
+    Navigator.pushReplacementNamed(context, route);
   }
 
   @override
@@ -46,7 +60,7 @@ class _SplashPageState extends State<SplashPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0A6CFF),
+      backgroundColor: Theme.of(context).primaryColor,
       body: Center(
         child: AnimatedOpacity(
           opacity: _animateIn ? 1.0 : 0.0,
@@ -60,14 +74,25 @@ class _SplashPageState extends State<SplashPage> {
               offset: _animateIn ? Offset.zero : const Offset(0, 0.08),
               duration: const Duration(milliseconds: 600),
               curve: Curves.easeOutCubic,
-              child: const Text(
-                'Travenor',
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white,
-                  letterSpacing: 0.5,
-                ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.flight_takeoff,
+                    size: 64,
+                    color: Colors.white,
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Travenor',
+                    style: TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),

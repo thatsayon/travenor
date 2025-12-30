@@ -22,9 +22,28 @@ class AuthNotifier extends StateNotifier<AuthState> {
   final GoogleSignInService _googleSignInService;
 
   AuthNotifier(this._authService, this._googleSignInService)
-      : super(const AuthState());
+      : super(const AuthState()) {
+    // Check for stored authentication on initialization
+    _checkStoredAuth();
+  }
 
-  // Sign In with Email & Password
+  // Check for stored authentication
+  Future<void> _checkStoredAuth() async {
+    try {
+      final user = await _googleSignInService.getStoredUser();
+      if (user != null) {
+        state = state.copyWith(
+          status: AuthStatus.authenticated,
+          user: user,
+        );
+        print('✅ Restored user session: ${user.name}');
+      }
+    } catch (e) {
+      print('❌ Error checking stored auth: $e');
+    }
+  }
+
+  // Sign In with Email & Password (for future use)
   Future<void> signIn(String email, String password) async {
     state = state.copyWith(status: AuthStatus.loading);
 
@@ -43,7 +62,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  // Sign Up
+  // Sign Up (for future use)
   Future<void> signUp({
     required String name,
     required String email,
