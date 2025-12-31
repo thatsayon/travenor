@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../routes/app_routes.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 import '../../utils/app_storage.dart';
 import '../../services/google_sign_in_service.dart';
 
@@ -14,17 +15,12 @@ class SplashPage extends ConsumerStatefulWidget {
 
 class _SplashPageState extends ConsumerState<SplashPage> {
   Timer? _timer;
-  bool _animateIn = false;
+
 
   @override
   void initState() {
     super.initState();
-
-    // Trigger animation on first frame (modern pattern)
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      setState(() => _animateIn = true);
-    });
-
+    // Do not remove native splash here. We wait for the timer/loading to complete.
     _timer = Timer(const Duration(seconds: 2), _navigate);
   }
 
@@ -47,6 +43,9 @@ class _SplashPageState extends ConsumerState<SplashPage> {
       // Not logged in, show sign in
       route = AppRoutes.login;
     }
+    
+    // Remove the native splash screen immediately before navigating
+    FlutterNativeSplash.remove();
 
     Navigator.pushReplacementNamed(context, route);
   }
@@ -59,45 +58,11 @@ class _SplashPageState extends ConsumerState<SplashPage> {
 
   @override
   Widget build(BuildContext context) {
+    // We show a simple container matching the splash background color
+    // This acts as a fallback/buffer if the native splash is removed slightly early
     return Scaffold(
       backgroundColor: Theme.of(context).primaryColor,
-      body: Center(
-        child: AnimatedOpacity(
-          opacity: _animateIn ? 1.0 : 0.0,
-          duration: const Duration(milliseconds: 500),
-          curve: Curves.easeOutCubic,
-          child: AnimatedScale(
-            scale: _animateIn ? 1.0 : 0.96,
-            duration: const Duration(milliseconds: 600),
-            curve: Curves.easeOutBack,
-            child: AnimatedSlide(
-              offset: _animateIn ? Offset.zero : const Offset(0, 0.08),
-              duration: const Duration(milliseconds: 600),
-              curve: Curves.easeOutCubic,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.flight_takeoff,
-                    size: 64,
-                    color: Colors.white,
-                  ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'Travenor',
-                    style: TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.w800,
-                      color: Colors.white,
-                      letterSpacing: -0.5,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
+      body: const SizedBox.shrink(), // No Flutter-side logo needed
     );
   }
 }

@@ -142,8 +142,8 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    AppTheme.primaryTeal,
-                    AppTheme.primaryTealDark,
+                    AppTheme.primaryBlue,
+                    AppTheme.primaryBlueDark,
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
@@ -190,7 +190,7 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
                   Text(
                     widget.tour.durationText,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Colors.white.withOpacity(0.9),
+                                    color: Colors.white.withValues(alpha: 0.9),
                         ),
                   ),
                 ],
@@ -201,7 +201,7 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
             LinearProgressIndicator(
               value: 0.5,
               backgroundColor: AppTheme.backgroundGray,
-              valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryTeal),
+              valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryBlue),
               minHeight: 4,
             ),
 
@@ -384,7 +384,7 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
                 color: Colors.white,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
+                    color: Colors.black.withValues(alpha: 0.1),
                     blurRadius: 16,
                     offset: const Offset(0, -4),
                   ),

@@ -92,7 +92,7 @@ class HelpSupportPage extends StatelessWidget {
             _buildContactOption(
               context,
               icon: Icons.email_outlined,
-              iconColor: AppTheme.primaryTeal,
+              iconColor: AppTheme.primaryBlue,
               title: 'Mail: support@travenor.com',
               onTap: _launchEmail,
             ),

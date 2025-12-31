@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'routes/app_routes.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
+  FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
   
   // Set system UI overlay style
   SystemChrome.setSystemUIOverlayStyle(
@@ -34,8 +36,8 @@ class MyApp extends StatelessWidget {
 
 class AppTheme {
   // Color Palette
-  static const Color primaryTeal = Color(0xFF0F766E);
-  static const Color primaryTealDark = Color(0xFF0D5E57);
+  static const Color primaryBlue = Color(0xFF0D6EFD);
+  static const Color primaryBlueDark = Color(0xFF0B5ED7);
   static const Color accentOrange = Color(0xFFFF5722);
   static const Color accentOrangeLight = Color(0xFFFF7043);
   
@@ -52,14 +54,13 @@ class AppTheme {
   static const Color error = Color(0xFFEF4444);
 
   static ThemeData get light {
-    final textTheme = GoogleFonts.interTextTheme();
     
     return ThemeData(
       useMaterial3: true,
-      primaryColor: primaryTeal,
+      primaryColor: primaryBlue,
       scaffoldBackgroundColor: backgroundWhite,
       colorScheme: const ColorScheme.light(
-        primary: primaryTeal,
+        primary: primaryBlue,
         secondary: accentOrange,
         surface: backgroundWhite,
         error: error,
@@ -144,7 +145,7 @@ class AppTheme {
           backgroundColor: accentOrange,
           foregroundColor: Colors.white,
           elevation: 2,
-          shadowColor: accentOrange.withOpacity(0.3),
+          shadowColor: accentOrange.withValues(alpha: 0.3),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
@@ -159,8 +160,8 @@ class AppTheme {
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           minimumSize: const Size(double.infinity, 56),
-          foregroundColor: primaryTeal,
-          side: const BorderSide(color: primaryTeal, width: 1.5),
+          foregroundColor: primaryBlue,
+          side: const BorderSide(color: primaryBlue, width: 1.5),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
@@ -195,7 +196,7 @@ class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: primaryTeal, width: 2),
+          borderSide: const BorderSide(color: primaryBlue, width: 2),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -218,7 +219,7 @@ class AppTheme {
 
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
         backgroundColor: backgroundWhite,
-        selectedItemColor: primaryTeal,
+        selectedItemColor: primaryBlue,
         unselectedItemColor: textLight,
         selectedLabelStyle: GoogleFonts.inter(
           fontSize: 12,

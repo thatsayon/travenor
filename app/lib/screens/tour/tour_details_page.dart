@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../main.dart';
 import '../../models/tour_model.dart';
-import '../../widgets/custom_badge.dart';
 import '../../services/profile_service.dart';
 import '../profile/complete_profile_page.dart';
 import '../booking/booking_confirmation_page.dart';
@@ -93,7 +92,7 @@ class _TourDetailsPageState extends State<TourDetailsPage> {
                       
                       const SizedBox(height: 24),
                       
-                      // Day-by-Day Itinerary
+                      // Itinerary
                       _buildItinerary(),
                       
                       const SizedBox(height: 24),
@@ -169,7 +168,7 @@ class _TourDetailsPageState extends State<TourDetailsPage> {
                   end: Alignment.bottomCenter,
                   colors: [
                     Colors.transparent,
-                    Colors.white.withOpacity(0.7),
+                    Colors.white.withValues(alpha: 0.7),
                     Colors.white,
                   ],
                 ),
@@ -241,28 +240,26 @@ class _TourDetailsPageState extends State<TourDetailsPage> {
           
           // Back button overlay
           Positioned(
-            top: 8,
+            top: 8, // Slight adjustment for higher positioning
             left: 16,
-            child: SafeArea(
-              child: GestureDetector(
-                onTap: () => Navigator.pop(context),
-                child: Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.2),
-                        blurRadius: 8,
-                      ),
-                    ],
-                  ),
-                  child: const Icon(
-                    Icons.arrow_back_ios_new,
-                    size: 18,
-                  ),
+            child: GestureDetector(
+              onTap: () => Navigator.pop(context),
+              child: Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.5),
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.1),
+                      blurRadius: 8,
+                    ),
+                  ],
+                ),
+                child: const Icon(
+                  Icons.arrow_back_ios_new,
+                  size: 18,
                 ),
               ),
             ),
@@ -287,7 +284,7 @@ class _TourDetailsPageState extends State<TourDetailsPage> {
       ),
       child: Column(
         children: [
-          Icon(icon, color: AppTheme.primaryTeal, size: 24),
+          Icon(icon, color: AppTheme.primaryBlue, size: 24),
           const SizedBox(height: 8),
           Text(
             label,
@@ -349,17 +346,17 @@ class _TourDetailsPageState extends State<TourDetailsPage> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: AppTheme.accentOrange.withOpacity(0.1),
+                      color: AppTheme.primaryBlue.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Row(
                       children: [
-                        Icon(Icons.access_time, size: 14, color: AppTheme.accentOrange),
+                        Icon(Icons.access_time, size: 14, color: AppTheme.primaryBlue),
                         const SizedBox(width: 4),
                         Text(
                           '0d 0h left',
                           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: AppTheme.accentOrange,
+                                color: AppTheme.primaryBlue,
                                 fontWeight: FontWeight.w700,
                               ),
                         ),
@@ -371,7 +368,7 @@ class _TourDetailsPageState extends State<TourDetailsPage> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
-                  color: AppTheme.accentOrange,
+                  color: Colors.grey.shade500,
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
@@ -407,7 +404,7 @@ class _TourDetailsPageState extends State<TourDetailsPage> {
             child: LinearProgressIndicator(
               value: widget.tour.spotsJoined / widget.tour.totalSpots,
               backgroundColor: AppTheme.backgroundGray,
-              valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryTeal),
+              valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryBlue),
               minHeight: 8,
             ),
           ),
@@ -443,7 +440,7 @@ class _TourDetailsPageState extends State<TourDetailsPage> {
                 style: Theme.of(context).textTheme.titleLarge,
               ),
               const SizedBox(width: 8),
-              Icon(Icons.verified, size: 18, color: AppTheme.primaryTeal),
+              Icon(Icons.verified, size: 18, color: AppTheme.primaryBlue),
             ],
           ),
           
@@ -497,13 +494,14 @@ class _TourDetailsPageState extends State<TourDetailsPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Day-by-Day Itinerary',
+          'Travel Plan',
           style: Theme.of(context).textTheme.headlineSmall,
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 8),
         ListView.separated(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
+          padding: EdgeInsets.zero,
           itemCount: widget.tour.itinerary.length,
           separatorBuilder: (context, index) => const SizedBox(height: 12),
           itemBuilder: (context, index) {
@@ -534,14 +532,14 @@ class _TourDetailsPageState extends State<TourDetailsPage> {
                             width: 32,
                             height: 32,
                             decoration: BoxDecoration(
-                              color: AppTheme.primaryTeal.withOpacity(0.1),
+                              color: AppTheme.primaryBlue.withValues(alpha: 0.1),
                               shape: BoxShape.circle,
                             ),
                             child: Center(
                               child: Text(
                                 '${day.day}',
                                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                      color: AppTheme.primaryTeal,
+                                      color: AppTheme.primaryBlue,
                                     ),
                               ),
                             ),
@@ -575,12 +573,13 @@ class _TourDetailsPageState extends State<TourDetailsPage> {
                         const Divider(),
                         const SizedBox(height: 8),
                         ...day.activities.map((activity) => Padding(
-                              padding: const EdgeInsets.only(left: 44, bottom: 8),
+                              padding: const EdgeInsets.only(bottom: 8),
                               child: Row(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
+                                  // Indentation removed
                                   Icon(
-                                    Icons.check_circle,
+                                    Icons.check_circle_outline,
                                     size: 16,
                                     color: AppTheme.success,
                                   ),
@@ -698,7 +697,7 @@ class _TourDetailsPageState extends State<TourDetailsPage> {
         children: [
           Row(
             children: [
-              Icon(Icons.place, color: AppTheme.primaryTeal, size: 24),
+              Icon(Icons.place, color: AppTheme.primaryBlue, size: 24),
               const SizedBox(width: 8),
               Text(
                 'Meeting Point',
@@ -739,9 +738,9 @@ class _TourDetailsPageState extends State<TourDetailsPage> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppTheme.success.withOpacity(0.05),
+        color: AppTheme.success.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.success.withOpacity(0.3)),
+        border: Border.all(color: AppTheme.success.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -788,18 +787,34 @@ class _TourDetailsPageState extends State<TourDetailsPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '৳${widget.tour.price}',
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                        color: AppTheme.primaryTeal,
-                        fontWeight: FontWeight.w800,
+                  'Total Cost: ৳${widget.tour.fullCost}',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: AppTheme.textPrimary,
+                        fontWeight: FontWeight.w700,
                       ),
                 ),
                 const SizedBox(height: 2),
-                Text(
-                  'per person',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppTheme.textSecondary,
-                      ),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.baseline,
+                  textBaseline: TextBaseline.alphabetic,
+                  children: [
+                    Text(
+                      '৳${widget.tour.price}',
+                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                            color: AppTheme.primaryBlue,
+                            fontWeight: FontWeight.w800,
+                          ),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      'Upfront',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            color: AppTheme.textPrimary,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 14,
+                          ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -837,7 +852,7 @@ class _TourDetailsPageState extends State<TourDetailsPage> {
                 }
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.primaryTeal,
+                backgroundColor: AppTheme.primaryBlue,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                 shape: RoundedRectangleBorder(

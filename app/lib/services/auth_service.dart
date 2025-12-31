@@ -1,18 +1,15 @@
 import 'package:dio/dio.dart';
 import '../models/user_model.dart';
-import 'dio_client.dart';
 
 class AuthService {
-  final DioClient _dioClient;
-
-  AuthService(this._dioClient);
+  AuthService();
 
   // Sign In with Email and Password
   Future<UserModel> signIn(String email, String password) async {
     try {
-      print('📧 Sign-In Request:');
-      print('  Email: $email');
-      print('  Password: ${'*' * password.length}');
+       // print('📧 Sign-In Request:');
+       // print('  Email: $email');
+       // print('  Password: ${'*' * password.length}');
 
       // Simulate API call - in production, this would be:
       // final response = await _dioClient.dio.post('/auth/signin', data: {
@@ -30,15 +27,15 @@ class AuthService {
         token: 'mock_token_${DateTime.now().millisecondsSinceEpoch}',
       );
 
-      print('✅ Sign-In Success:');
-      print('  User: ${mockUser.toString()}');
+       // print('✅ Sign-In Success:');
+       // print('  User: ${mockUser.toString()}');
 
       return mockUser;
     } on DioException catch (e) {
-      print('❌ Sign-In DioException: ${e.message}');
+       // print('❌ Sign-In DioException: ${e.message}');
       throw Exception('Sign-in failed: ${e.message}');
     } catch (e) {
-      print('❌ Sign-In Error: $e');
+       // print('❌ Sign-In Error: $e');
       throw Exception('Sign-in failed: $e');
     }
   }
@@ -50,10 +47,10 @@ class AuthService {
     required String password,
   }) async {
     try {
-      print('📝 Sign-Up Request:');
-      print('  Name: $name');
-      print('  Email: $email');
-      print('  Password: ${'*' * password.length}');
+       // print('📝 Sign-Up Request:');
+       // print('  Name: $name');
+       // print('  Email: $email');
+       // print('  Password: ${'*' * password.length}');
 
       // Simulate API call - in production, this would be:
       // final response = await _dioClient.dio.post('/auth/signup', data: {
@@ -72,15 +69,15 @@ class AuthService {
         token: 'mock_token_${DateTime.now().millisecondsSinceEpoch}',
       );
 
-      print('✅ Sign-Up Success:');
-      print('  User: ${mockUser.toString()}');
+       // print('✅ Sign-Up Success:');
+       // print('  User: ${mockUser.toString()}');
 
       return mockUser;
     } on DioException catch (e) {
-      print('❌ Sign-Up DioException: ${e.message}');
+       // print('❌ Sign-Up DioException: ${e.message}');
       throw Exception('Sign-up failed: ${e.message}');
     } catch (e) {
-      print('❌ Sign-Up Error: $e');
+       // print('❌ Sign-Up Error: $e');
       throw Exception('Sign-up failed: $e');
     }
   }
@@ -88,15 +85,15 @@ class AuthService {
   // Sign Out
   Future<void> signOut() async {
     try {
-      print('👋 Sign-Out Request');
+       // print('👋 Sign-Out Request');
       
       // In production, this would be:
       // await _dioClient.dio.post('/auth/signout');
       
       await Future.delayed(const Duration(milliseconds: 500));
-      print('✅ Sign-Out Success');
+       // print('✅ Sign-Out Success');
     } catch (e) {
-      print('❌ Sign-Out Error: $e');
+       // print('❌ Sign-Out Error: $e');
     }
   }
 }

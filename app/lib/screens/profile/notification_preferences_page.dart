@@ -171,7 +171,7 @@ class _NotificationPreferencesPageState extends State<NotificationPreferencesPag
           Switch(
             value: value,
             onChanged: onChanged,
-            activeColor: AppTheme.primaryTeal,
+            activeThumbColor: AppTheme.primaryBlue,
           ),
         ],
       ),

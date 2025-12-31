@@ -38,7 +38,7 @@ class AccountSettingsPage extends ConsumerWidget {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: AppTheme.error.withOpacity(0.1),
+                color: AppTheme.error.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
@@ -139,45 +139,8 @@ class AccountSettingsPage extends ConsumerWidget {
     }
   }
 
-  Future<void> _exportData(BuildContext context) async {
-    try {
-      final profileService = ProfileService();
-      final data = await profileService.exportProfileData();
-      
-      if (!context.mounted) return;
-      
-      if (data != null) {
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('Your Data'),
-            content: SingleChildScrollView(
-              child: Text(data.toString()),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Close'),
-              ),
-            ],
-          ),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No data to export')),
-        );
-      }
-    } catch (error) {
-      if (!context.mounted) return;
-      
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error exporting data: $error'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
-  }
+
+
 
   static Widget _buildWarningItem(BuildContext context, String text) {
     return Padding(
@@ -262,7 +225,7 @@ class AccountSettingsPage extends ConsumerWidget {
 
           Container(
             decoration: BoxDecoration(
-              border: Border.all(color: AppTheme.error.withOpacity(0.3)),
+              border: Border.all(color: AppTheme.error.withValues(alpha: 0.3)),
               borderRadius: BorderRadius.circular(12),
             ),
             child: _buildSettingItem(
@@ -314,12 +277,12 @@ class AccountSettingsPage extends ConsumerWidget {
               width: 44,
               height: 44,
               decoration: BoxDecoration(
-                color: (iconColor ?? AppTheme.primaryTeal).withOpacity(0.1),
+                color: (iconColor ?? AppTheme.primaryBlue).withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(
                 icon,
-                color: iconColor ?? AppTheme.primaryTeal,
+                color: iconColor ?? AppTheme.primaryBlue,
                 size: 24,
               ),
             ),

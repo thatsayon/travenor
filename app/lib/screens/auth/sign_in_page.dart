@@ -36,10 +36,8 @@ class SignInPage extends ConsumerWidget {
     await prefs.setBool('is_authenticated', true);
 
     // Update auth state  
-    ref.read(authProvider.notifier).state = AuthState(
-      status: AuthStatus.authenticated,
-      user: mockUser,
-    );
+    // Update auth state  
+    ref.read(authProvider.notifier).setAuthenticatedUser(mockUser);
   }
 
   @override
@@ -80,7 +78,7 @@ class SignInPage extends ConsumerWidget {
                   gradient: LinearGradient(
                     colors: [
                       Theme.of(context).colorScheme.primary,
-                      Theme.of(context).colorScheme.primary.withOpacity(0.7),
+                      Theme.of(context).colorScheme.primary.withValues(alpha: 0.7),
                     ],
                   ),
                   shape: BoxShape.circle,
@@ -149,7 +147,7 @@ class SignInPage extends ConsumerWidget {
                     backgroundColor: Colors.white,
                     foregroundColor: AppTheme.textPrimary,
                     elevation: 2,
-                    shadowColor: Colors.black.withOpacity(0.1),
+                    shadowColor: Colors.black.withValues(alpha: 0.1),
                     side: BorderSide(color: AppTheme.borderGray),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -164,7 +162,7 @@ class SignInPage extends ConsumerWidget {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: AppTheme.primaryTeal.withOpacity(0.1),
+                  color: AppTheme.primaryBlue.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
@@ -172,14 +170,14 @@ class SignInPage extends ConsumerWidget {
                     Icon(
                       Icons.info_outline,
                       size: 18,
-                      color: AppTheme.primaryTeal,
+                      color: AppTheme.primaryBlue,
                     ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         'Using demo mode for testing on desktop',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: AppTheme.primaryTeal,
+                              color: AppTheme.primaryBlue,
                               fontWeight: FontWeight.w500,
                             ),
                       ),

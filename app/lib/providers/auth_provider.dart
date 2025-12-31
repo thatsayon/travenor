@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/auth_state.dart';
+import '../models/user_model.dart';
 import '../services/auth_service.dart';
 import '../services/dio_client.dart';
 import '../services/google_sign_in_service.dart';
@@ -8,8 +9,7 @@ import '../services/google_sign_in_service.dart';
 final dioClientProvider = Provider<DioClient>((ref) => DioClient());
 
 final authServiceProvider = Provider<AuthService>((ref) {
-  final dioClient = ref.watch(dioClientProvider);
-  return AuthService(dioClient);
+  return AuthService();
 });
 
 final googleSignInServiceProvider = Provider<GoogleSignInService>(
@@ -36,11 +36,19 @@ class AuthNotifier extends StateNotifier<AuthState> {
           status: AuthStatus.authenticated,
           user: user,
         );
-        print('✅ Restored user session: ${user.name}');
+        // print('✅ Restored user session: ${user.name}');
       }
     } catch (e) {
-      print('❌ Error checking stored auth: $e');
+      // print('❌ Error checking stored auth: $e');
     }
+  }
+
+  // Set authenticated user (useful for testing/mocking)
+  void setAuthenticatedUser(UserModel user) {
+    state = state.copyWith(
+      status: AuthStatus.authenticated,
+      user: user,
+    );
   }
 
   // Sign In with Email & Password (for future use)

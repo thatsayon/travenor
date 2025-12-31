@@ -27,7 +27,7 @@ class DioClient {
         responseHeader: true,
         responseBody: true,
         error: true,
-        logPrint: (obj) => print('[DIO] $obj'),
+        logPrint: (obj) {},
       ),
     );
   }

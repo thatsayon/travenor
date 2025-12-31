@@ -21,7 +21,7 @@ class GoogleSignInService {
       final GoogleSignInAccount? account = await _googleSignIn.signIn();
       
       if (account == null) {
-        print('Google Sign-In cancelled by user');
+         // print('Google Sign-In cancelled by user');
         return null;
       }
 
@@ -40,15 +40,15 @@ class GoogleSignInService {
       await _saveUserData(user);
       await _saveAuthState(true);
 
-      print('✅ Google Sign-In Success:');
-      print('  Name: ${user.name}');
-      print('  Email: ${user.email}');
-      print('  Photo URL: ${user.photoUrl}');
-      print('  Stored locally');
+       // print('✅ Google Sign-In Success:');
+       // print('  Name: ${user.name}');
+       // print('  Email: ${user.email}');
+       // print('  Photo URL: ${user.photoUrl}');
+       // print('  Stored locally');
 
       return user;
     } catch (error) {
-      print('❌ Google Sign-In Error: $error');
+       // print('❌ Google Sign-In Error: $error');
       return null;
     }
   }
@@ -69,7 +69,7 @@ class GoogleSignInService {
         await prefs.setString(_tokenKey, user.token!);
       }
     } catch (error) {
-      print('❌ Error saving user data: $error');
+       // print('❌ Error saving user data: $error');
     }
   }
 
@@ -79,7 +79,7 @@ class GoogleSignInService {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool(_isAuthenticatedKey, isAuthenticated);
     } catch (error) {
-      print('❌ Error saving auth state: $error');
+       // print('❌ Error saving auth state: $error');
     }
   }
 
@@ -107,7 +107,7 @@ class GoogleSignInService {
         token: userData['token'],
       );
     } catch (error) {
-      print('❌ Error getting stored user: $error');
+       // print('❌ Error getting stored user: $error');
       return null;
     }
   }
@@ -118,7 +118,7 @@ class GoogleSignInService {
       final prefs = await SharedPreferences.getInstance();
       return prefs.getBool(_isAuthenticatedKey) ?? false;
     } catch (error) {
-      print('❌ Error checking auth status: $error');
+       // print('❌ Error checking auth status: $error');
       return false;
     }
   }
@@ -129,7 +129,7 @@ class GoogleSignInService {
       final prefs = await SharedPreferences.getInstance();
       return prefs.getString(_tokenKey);
     } catch (error) {
-      print('❌ Error getting stored token: $error');
+       // print('❌ Error getting stored token: $error');
       return null;
     }
   }
@@ -145,9 +145,9 @@ class GoogleSignInService {
       await prefs.remove(_tokenKey);
       await prefs.setBool(_isAuthenticatedKey, false);
       
-      print('✅ Google Sign-Out Success');
+       // print('✅ Google Sign-Out Success');
     } catch (error) {
-      print('❌ Google Sign-Out Error: $error');
+       // print('❌ Google Sign-Out Error: $error');
     }
   }
 
@@ -180,7 +180,7 @@ class GoogleSignInService {
 
       return user;
     } catch (error) {
-      print('❌ Get Current User Error: $error');
+       // print('❌ Get Current User Error: $error');
       return null;
     }
   }

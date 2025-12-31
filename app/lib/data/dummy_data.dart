@@ -35,6 +35,7 @@ class DummyData {
     durationDays: 4,
     durationNights: 3,
     price: 2500,
+    fullCost: 6500,
     rating: 4.8,
     reviewCount: 124,
     imageUrl: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800&q=80',
@@ -46,7 +47,7 @@ class DummyData {
     stayRating: 4.2,
     totalSpots: 16,
     spotsJoined: 8,
-    joinDeadline: '2024-02-15T00:00:00.000Z',
+    joinDeadline: DateTime.now().add(const Duration(days: 30)).toIso8601String(),
     tourLead: rafiqAhmed,
     itinerary: [
       DayItinerary(
@@ -125,6 +126,7 @@ class DummyData {
     durationDays: 3,
     durationNights: 2,
     price: 3200,
+    fullCost: 8500,
     rating: 4.6,
     reviewCount: 89,
     imageUrl: 'https://images.unsplash.com/photo-1559664651-be3b9e1e5238?w=800&q=80',
@@ -136,7 +138,7 @@ class DummyData {
     stayRating: 4.7,
     totalSpots: 20,
     spotsJoined: 15,
-    joinDeadline: '2024-03-01T00:00:00.000Z',
+    joinDeadline: DateTime.now().add(const Duration(days: 45)).toIso8601String(),
     tourLead: nasrinBegum,
     itinerary: [
       DayItinerary(
@@ -205,6 +207,7 @@ class DummyData {
     durationDays: 3,
     durationNights: 2,
     price: 2800,
+    fullCost: 7500,
     rating: 4.7,
     reviewCount: 67,
     imageUrl: 'https://images.unsplash.com/photo-1563296374-c3e8ee801fc0?w=800&q=80',
@@ -216,7 +219,7 @@ class DummyData {
     stayRating: 4.6,
     totalSpots: 12,
     spotsJoined: 9,
-    joinDeadline: '2024-02-28T00:00:00.000Z',
+    joinDeadline: DateTime.now().add(const Duration(days: 60)).toIso8601String(),
     tourLead: kamalHossain,
     itinerary: [
       DayItinerary(
@@ -288,7 +291,7 @@ class DummyData {
         BookingModel(
           id: 'booking_1',
           tour: sundarbansExplorer,
-          bookingDate: '2024-02-15T00:00:00.000Z',
+          bookingDate: DateTime.now().add(const Duration(days: 30)).toIso8601String(),
           status: 'pending',
           pricePaid: 2500,
           specialNote: 'Waiting for minimum group size to be reached',

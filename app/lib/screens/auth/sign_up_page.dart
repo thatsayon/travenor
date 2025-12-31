@@ -267,7 +267,6 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
                           GestureDetector(
                             onTap: () {
                               // TODO: Show terms
-                              print('Terms & Conditions clicked');
                             },
                             child: const Text(
                               'Terms & Conditions',

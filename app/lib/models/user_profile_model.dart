@@ -3,6 +3,11 @@ class UserProfileModel {
   final String? phoneNumber;
   final String? email;
   final String? emergencyContact;
+  final String? gender;
+  final DateTime? dateOfBirth;
+  final String? bloodGroup;
+  final String? presentAddress;
+  final String? emergencyContactRelation;
   final bool isComplete;
   final DateTime? lastUpdated;
 
@@ -11,18 +16,43 @@ class UserProfileModel {
     this.phoneNumber,
     this.email,
     this.emergencyContact,
+    this.gender,
+    this.dateOfBirth,
+    this.bloodGroup,
+    this.presentAddress,
+    this.emergencyContactRelation,
     bool? isComplete,
     this.lastUpdated,
-  }) : isComplete = isComplete ?? _checkComplete(fullName, phoneNumber, emergencyContact);
+  }) : isComplete = isComplete ?? _checkComplete(
+    fullName, 
+    phoneNumber, 
+    emergencyContact,
+    gender,
+    dateOfBirth,
+    bloodGroup,
+    presentAddress,
+    emergencyContactRelation,
+  );
 
   // Check if profile is complete (required fields filled)
-  static bool _checkComplete(String? fullName, String? phoneNumber, String? emergencyContact) {
-    return fullName != null &&
-        fullName.isNotEmpty &&
-        phoneNumber != null &&
-        phoneNumber.isNotEmpty &&
-        emergencyContact != null &&
-        emergencyContact.isNotEmpty;
+  static bool _checkComplete(
+    String? fullName, 
+    String? phoneNumber, 
+    String? emergencyContact,
+    String? gender,
+    DateTime? dateOfBirth,
+    String? bloodGroup,
+    String? presentAddress,
+    String? emergencyContactRelation,
+  ) {
+    return fullName != null && fullName.isNotEmpty &&
+        phoneNumber != null && phoneNumber.isNotEmpty &&
+        emergencyContact != null && emergencyContact.isNotEmpty &&
+        gender != null && gender.isNotEmpty &&
+        dateOfBirth != null &&
+        bloodGroup != null && bloodGroup.isNotEmpty &&
+        presentAddress != null && presentAddress.isNotEmpty &&
+        emergencyContactRelation != null && emergencyContactRelation.isNotEmpty;
   }
 
   // Convert to JSON for storage
@@ -32,6 +62,11 @@ class UserProfileModel {
       'phoneNumber': phoneNumber,
       'email': email,
       'emergencyContact': emergencyContact,
+      'gender': gender,
+      'dateOfBirth': dateOfBirth?.toIso8601String(),
+      'bloodGroup': bloodGroup,
+      'presentAddress': presentAddress,
+      'emergencyContactRelation': emergencyContactRelation,
       'isComplete': isComplete,
       'lastUpdated': lastUpdated?.toIso8601String(),
     };
@@ -44,6 +79,11 @@ class UserProfileModel {
       phoneNumber: json['phoneNumber'],
       email: json['email'],
       emergencyContact: json['emergencyContact'],
+      gender: json['gender'],
+      dateOfBirth: json['dateOfBirth'] != null ? DateTime.parse(json['dateOfBirth']) : null,
+      bloodGroup: json['bloodGroup'],
+      presentAddress: json['presentAddress'],
+      emergencyContactRelation: json['emergencyContactRelation'],
       isComplete: json['isComplete'] ?? false,
       lastUpdated: json['lastUpdated'] != null
           ? DateTime.parse(json['lastUpdated'])
@@ -57,6 +97,11 @@ class UserProfileModel {
     String? phoneNumber,
     String? email,
     String? emergencyContact,
+    String? gender,
+    DateTime? dateOfBirth,
+    String? bloodGroup,
+    String? presentAddress,
+    String? emergencyContactRelation,
     bool? isComplete,
     DateTime? lastUpdated,
   }) {
@@ -65,6 +110,11 @@ class UserProfileModel {
       phoneNumber: phoneNumber ?? this.phoneNumber,
       email: email ?? this.email,
       emergencyContact: emergencyContact ?? this.emergencyContact,
+      gender: gender ?? this.gender,
+      dateOfBirth: dateOfBirth ?? this.dateOfBirth,
+      bloodGroup: bloodGroup ?? this.bloodGroup,
+      presentAddress: presentAddress ?? this.presentAddress,
+      emergencyContactRelation: emergencyContactRelation ?? this.emergencyContactRelation,
       isComplete: isComplete ?? this.isComplete,
       lastUpdated: lastUpdated ?? this.lastUpdated,
     );

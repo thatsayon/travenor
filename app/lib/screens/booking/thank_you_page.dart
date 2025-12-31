@@ -28,7 +28,7 @@ class ThankYouPage extends StatelessWidget {
                 width: 120,
                 height: 120,
                 decoration: BoxDecoration(
-                  color: AppTheme.success.withOpacity(0.1),
+                  color: AppTheme.success.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
@@ -80,7 +80,7 @@ class ThankYouPage extends StatelessWidget {
                     Text(
                       bookingReference,
                       style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                            color: AppTheme.primaryTeal,
+                            color: AppTheme.primaryBlue,
                             fontWeight: FontWeight.w800,
                             letterSpacing: 2,
                           ),
@@ -119,14 +119,14 @@ class ThankYouPage extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: AppTheme.primaryTeal.withOpacity(0.1),
+                  color: AppTheme.primaryBlue.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(
                   children: [
                     Icon(
                       Icons.info_outline,
-                      color: AppTheme.primaryTeal,
+                      color: AppTheme.primaryBlue,
                       size: 24,
                     ),
                     const SizedBox(width: 12),
@@ -137,7 +137,7 @@ class ThankYouPage extends StatelessWidget {
                           Text(
                             'What Happens Next?',
                             style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                  color: AppTheme.primaryTeal,
+                                  color: AppTheme.primaryBlue,
                                   fontWeight: FontWeight.w600,
                                 ),
                           ),

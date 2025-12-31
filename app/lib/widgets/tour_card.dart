@@ -30,7 +30,7 @@ class TourCard extends StatelessWidget {
           border: Border.all(color: AppTheme.borderGray),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: Colors.black.withValues(alpha: 0.04),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -73,11 +73,11 @@ class TourCard extends StatelessWidget {
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.9),
+                      color: Colors.white.withValues(alpha: 0.9),
                       borderRadius: BorderRadius.circular(20),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
+                          color: Colors.black.withValues(alpha: 0.1),
                           blurRadius: 8,
                           offset: const Offset(0, 2),
                         ),
@@ -207,7 +207,7 @@ class TourCard extends StatelessWidget {
                     child: LinearProgressIndicator(
                       value: tour.spotsJoined / tour.totalSpots,
                       backgroundColor: AppTheme.backgroundGray,
-                      valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryTeal),
+                      valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryBlue),
                       minHeight: 6,
                     ),
                   ),
@@ -237,7 +237,7 @@ class TourCard extends StatelessWidget {
                               Text(
                                 '৳${tour.price}',
                                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                                      color: AppTheme.primaryTeal,
+                                      color: AppTheme.primaryBlue,
                                       fontWeight: FontWeight.w800,
                                     ),
                               ),
@@ -255,7 +255,7 @@ class TourCard extends StatelessWidget {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            'Total: ৳${(tour.price * 1.2).toStringAsFixed(0)}',
+                            'Total: ৳${tour.fullCost}',
                             style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                   color: AppTheme.textLight,
                                 ),

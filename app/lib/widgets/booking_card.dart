@@ -11,22 +11,7 @@ class BookingCard extends StatelessWidget {
     required this.booking,
   });
 
-  Color _getStatusColor() {
-    switch (booking.status.toLowerCase()) {
-      case 'confirmed':
-        return AppTheme.success;
-      case 'pending':
-        return AppTheme.warning;
-      case 'cancelled':
-        return AppTheme.error;
-      default:
-        return AppTheme.textSecondary;
-    }
-  }
 
-  String _getStatusText() {
-    return booking.status[0].toUpperCase() + booking.status.substring(1);
-  }
 
   String _formatDate(String isoDate) {
     try {
@@ -39,97 +24,98 @@ class BookingCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool isPending = booking.status.toLowerCase() == 'pending';
+    
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppTheme.borderGray),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Main content
           Padding(
             padding: const EdgeInsets.all(12),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Tour image
+                // Tour Image
                 ClipRRect(
                   borderRadius: BorderRadius.circular(8),
                   child: Image.network(
                     booking.tour.imageUrl,
-                    width: 110,
-                    height: 80,
+                    width: 100,
+                    height: 100,
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stackTrace) {
                       return Container(
-                        width: 110,
-                        height: 80,
+                        width: 100,
+                        height: 100,
                         color: AppTheme.backgroundGray,
-                        child: Icon(
-                          Icons.image_outlined,
-                          color: AppTheme.textLight,
-                          size: 32,
-                        ),
+                        child: Icon(Icons.image_outlined, color: AppTheme.textLight),
                       );
                     },
                   ),
                 ),
-                
                 const SizedBox(width: 12),
                 
-                // Tour details
+                // Content
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Tour name and status
+                      // Title and Status
                       Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Expanded(
                             child: Text(
                               booking.tour.title,
-                              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              style: Theme.of(context).textTheme.titleSmall?.copyWith(
                                     fontWeight: FontWeight.w700,
+                                    fontSize: 15,
                                   ),
-                              maxLines: 1,
+                              maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
                           const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
+                          if (isPending)
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFFFF8E1), // Light yellow bg
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: const Color(0xFFFFCC80)),
+                              ),
+                              child: Text(
+                                'Pending',
+                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                      color: const Color(0xFFF57C00),
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 11,
+                                    ),
+                              ),
                             ),
-                            decoration: BoxDecoration(
-                              color: _getStatusColor().withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: Text(
-                              _getStatusText(),
-                              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                    color: _getStatusColor(),
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                            ),
-                          ),
                         ],
                       ),
                       
-                      const SizedBox(height: 6),
+                      const SizedBox(height: 8),
                       
                       // Date
                       Row(
                         children: [
-                          Icon(
-                            Icons.calendar_today,
-                            size: 14,
-                            color: AppTheme.textSecondary,
-                          ),
-                          const SizedBox(width: 4),
+                          Icon(Icons.calendar_today_outlined, size: 14, color: AppTheme.textSecondary),
+                          const SizedBox(width: 6),
                           Text(
                             _formatDate(booking.bookingDate),
                             style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -144,12 +130,8 @@ class BookingCard extends StatelessWidget {
                       // Location
                       Row(
                         children: [
-                          Icon(
-                            Icons.location_on_outlined,
-                            size: 14,
-                            color: AppTheme.textSecondary,
-                          ),
-                          const SizedBox(width: 4),
+                          Icon(Icons.location_on_outlined, size: 14, color: AppTheme.textSecondary),
+                          const SizedBox(width: 6),
                           Expanded(
                             child: Text(
                               booking.tour.location,
@@ -165,7 +147,7 @@ class BookingCard extends StatelessWidget {
                       
                       const SizedBox(height: 8),
                       
-                      // Price and Details button
+                      // Price and Link
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -176,30 +158,35 @@ class BookingCard extends StatelessWidget {
                                 'Paid',
                                 style: Theme.of(context).textTheme.labelSmall?.copyWith(
                                       color: AppTheme.textSecondary,
+                                      fontSize: 10,
                                     ),
                               ),
                               Text(
                                 '৳${booking.pricePaid.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}',
                                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                      color: AppTheme.primaryTeal,
+                                      color: AppTheme.primaryBlue,
                                       fontWeight: FontWeight.w700,
                                     ),
                               ),
                             ],
                           ),
-                          TextButton(
-                            onPressed: () {
-                              // Navigate to tour details
+                          
+                          GestureDetector(
+                            onTap: () {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(content: Text('Tour details coming soon')),
                               );
                             },
                             child: Row(
-                              mainAxisSize: MainAxisSize.min,
                               children: [
-                                Text('Details'),
-                                const SizedBox(width: 4),
-                                Icon(Icons.chevron_right, size: 18),
+                                Text(
+                                  'Details',
+                                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                ),
+                                const SizedBox(width: 2),
+                                const Icon(Icons.chevron_right, size: 16),
                               ],
                             ),
                           ),
@@ -212,31 +199,32 @@ class BookingCard extends StatelessWidget {
             ),
           ),
           
-          // Warning message for pending status
-          if (booking.status.toLowerCase() == 'pending')
+          // Pending Footer
+          if (isPending)
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              decoration: BoxDecoration(
-                color: AppTheme.warning.withOpacity(0.1),
-                borderRadius: const BorderRadius.only(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              decoration: const BoxDecoration(
+                color: Color(0xFFFFF8E1), // Light yellow
+                borderRadius: BorderRadius.only(
                   bottomLeft: Radius.circular(12),
                   bottomRight: Radius.circular(12),
                 ),
               ),
               child: Row(
                 children: [
-                  Icon(
+                  const Icon(
                     Icons.access_time,
                     size: 16,
-                    color: AppTheme.warning,
+                    color: Color(0xFFF57C00), // Orange
                   ),
-                  const SizedBox(width: 6),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       'Waiting for minimum group size to be reached',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: AppTheme.warning.withOpacity(0.9),
+                            color: const Color(0xFFF57C00),
+                            fontWeight: FontWeight.w500,
                             fontSize: 12,
                           ),
                     ),

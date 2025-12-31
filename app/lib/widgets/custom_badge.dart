@@ -26,7 +26,7 @@ class CustomBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -38,7 +38,7 @@ class CustomBadge extends StatelessWidget {
           Icon(
             icon,
             size: 16,
-            color: iconColor ?? AppTheme.primaryTeal,
+            color: iconColor ?? AppTheme.primaryBlue,
           ),
           const SizedBox(width: 4),
           Text(

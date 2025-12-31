@@ -86,59 +86,85 @@ class _MyToursPageState extends State<MyToursPage> with SingleTickerProviderStat
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Header with title
+            // Header with title
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    AppTheme.primaryTeal,
-                    AppTheme.primaryTealDark,
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
+              padding: const EdgeInsets.symmetric(vertical: 20),
+              child: Center(
+                child: Text(
+                  'My Tours',
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                        color: AppTheme.textPrimary,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 18,
+                      ),
                 ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'My Tours',
-                    style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w700,
-                        ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Track your adventures',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Colors.white.withOpacity(0.9),
-                        ),
-                  ),
-                ],
               ),
             ),
             
-            // Tab bar with white background
-            Container(
-              color: Colors.white,
-              child: TabBar(
-                controller: _tabController,
-                labelColor: AppTheme.textPrimary,
-                unselectedLabelColor: AppTheme.textLight,
-                indicatorColor: AppTheme.primaryTeal,
-                indicatorWeight: 2,
-                labelStyle: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
+            // Tab bar container overlapping the header slightly or just below
+            // Tab bar container
+            Transform.translate(
+              offset: const Offset(0, 0), // No overlap needed
+              child: Container(
+                margin: const EdgeInsets.symmetric(horizontal: 16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF5F5F5), // Moved background color here
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.grey.shade300), // Reduced to grey 300 for subtler look
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
                     ),
-                unselectedLabelStyle: Theme.of(context).textTheme.titleMedium,
-                tabs: const [
-                  Tab(text: 'Upcoming'),
-                  Tab(text: 'Past'),
-                ],
+                  ],
+                ),
+                child: Container(
+                  height: 48, // Slightly increased height for better touch targets
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: TabBar(
+                      controller: _tabController,
+                      indicatorSize: TabBarIndicatorSize.tab,
+                      padding: const EdgeInsets.all(4), // Padding around the entire tab bar content
+                      indicatorPadding: EdgeInsets.zero, // The indicator fills the "tab" space, which is already constrained by the padding above
+                      dividerColor: Colors.transparent, // Ensure no divider line
+                      indicator: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(6),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.1),
+                            blurRadius: 2,
+                            offset: const Offset(0, 1),
+                          ),
+                        ],
+                      ),
+                      labelColor: AppTheme.primaryBlue, // Selected text color
+                      unselectedLabelColor: Colors.grey[600],
+                      labelStyle: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                      ),
+                      unselectedLabelStyle: const TextStyle(
+                        fontWeight: FontWeight.w500,
+                        fontSize: 14,
+                      ),
+                      tabs: const [
+                        Tab(text: 'Upcoming'),
+                        Tab(text: 'Past'),
+                      ],
+                    ),
+                  ),
+                ),
               ),
-            ),
+
+            
+            // Fix spacing for tab bar transform
+            // Adjusted spacing after tab bar
+            const SizedBox(height: 0),
             
             // Content
             Expanded(
@@ -194,7 +220,7 @@ class _MyToursPageState extends State<MyToursPage> with SingleTickerProviderStat
     
     return RefreshIndicator(
       onRefresh: _loadBookings,
-      color: AppTheme.primaryTeal,
+      color: AppTheme.primaryBlue,
       child: ListView.builder(
         padding: const EdgeInsets.all(16),
         itemCount: bookings.length,

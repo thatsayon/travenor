@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../main.dart';
 import '../../models/tour_model.dart';
 import '../../models/user_profile_model.dart';
-import '../../models/auth_state.dart';
+
 import '../../providers/auth_provider.dart';
 import '../../services/booking_service.dart';
 import 'thank_you_page.dart';
@@ -92,8 +92,8 @@ class _BookingConfirmationPageState extends ConsumerState<BookingConfirmationPag
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    AppTheme.primaryTeal,
-                    AppTheme.primaryTealDark,
+                    AppTheme.primaryBlue,
+                    AppTheme.primaryBlueDark,
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
@@ -233,9 +233,9 @@ class _BookingConfirmationPageState extends ConsumerState<BookingConfirmationPag
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: AppTheme.primaryTeal.withOpacity(0.05),
+                        color: AppTheme.primaryBlue.withValues(alpha: 0.05),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: AppTheme.primaryTeal.withOpacity(0.3)),
+                        border: Border.all(color: AppTheme.primaryBlue.withValues(alpha: 0.3)),
                       ),
                       child: Column(
                         children: [
@@ -267,7 +267,7 @@ class _BookingConfirmationPageState extends ConsumerState<BookingConfirmationPag
                               Text(
                                 '৳${widget.tour.price}',
                                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                      color: AppTheme.primaryTeal,
+                                      color: AppTheme.primaryBlue,
                                       fontWeight: FontWeight.w800,
                                     ),
                               ),
@@ -288,7 +288,7 @@ class _BookingConfirmationPageState extends ConsumerState<BookingConfirmationPag
                           Checkbox(
                             value: _agreedToTerms,
                             onChanged: (value) => setState(() => _agreedToTerms = value ?? false),
-                            activeColor: AppTheme.primaryTeal,
+                            activeColor: AppTheme.primaryBlue,
                           ),
                           Expanded(
                             child: Padding(
@@ -321,7 +321,7 @@ class _BookingConfirmationPageState extends ConsumerState<BookingConfirmationPag
                 color: Colors.white,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
+                    color: Colors.black.withValues(alpha: 0.1),
                     blurRadius: 16,
                     offset: const Offset(0, -4),
                   ),

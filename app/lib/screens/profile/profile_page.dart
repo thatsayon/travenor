@@ -45,7 +45,7 @@ class ProfilePage extends ConsumerWidget {
                           ? Icon(
                               Icons.person,
                               size: 50,
-                              color: AppTheme.primaryTeal,
+                              color: AppTheme.primaryBlue,
                             )
                           : null,
                     ),
@@ -274,7 +274,7 @@ class ProfilePage extends ConsumerWidget {
               ),
               child: Icon(
                 icon,
-                color: AppTheme.primaryTeal,
+                color: AppTheme.primaryBlue,
                 size: 24,
               ),
             ),

@@ -25,13 +25,13 @@ class AboutPage extends StatelessWidget {
                 width: 100,
                 height: 100,
                 decoration: BoxDecoration(
-                  color: AppTheme.primaryTeal.withOpacity(0.1),
+                  color: AppTheme.primaryBlue.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Icon(
                   Icons.explore,
                   size: 60,
-                  color: AppTheme.primaryTeal,
+                  color: AppTheme.primaryBlue,
                 ),
               ),
             ),
@@ -154,12 +154,12 @@ class AboutPage extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: AppTheme.primaryTeal.withOpacity(0.1),
+              color: AppTheme.primaryBlue.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(
               icon,
-              color: AppTheme.primaryTeal,
+              color: AppTheme.primaryBlue,
               size: 24,
             ),
           ),

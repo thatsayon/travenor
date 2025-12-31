@@ -12,9 +12,9 @@ class ProfileService {
       final now = DateTime.now();
       final updatedProfile = profile.copyWith(lastUpdated: now);
       await prefs.setString(_profileKey, jsonEncode(updatedProfile.toJson()));
-      print('✅ Profile saved successfully');
+       // print('✅ Profile saved successfully');
     } catch (error) {
-      print('❌ Error saving profile: $error');
+       // print('❌ Error saving profile: $error');
       rethrow;
     }
   }
@@ -32,7 +32,7 @@ class ProfileService {
       final profileJson = jsonDecode(profileString);
       return UserProfileModel.fromJson(profileJson);
     } catch (error) {
-      print('❌ Error getting profile: $error');
+       // print('❌ Error getting profile: $error');
       return null;
     }
   }
@@ -48,9 +48,9 @@ class ProfileService {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove(_profileKey);
-      print('✅ Profile cleared');
+       // print('✅ Profile cleared');
     } catch (error) {
-      print('❌ Error clearing profile: $error');
+       // print('❌ Error clearing profile: $error');
     }
   }
 

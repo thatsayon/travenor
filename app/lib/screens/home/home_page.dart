@@ -24,8 +24,8 @@ class HomePage extends StatelessWidget {
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      AppTheme.primaryTeal,
-                      AppTheme.primaryTealDark,
+                      AppTheme.primaryBlue,
+                      AppTheme.primaryBlueDark,
                     ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
@@ -42,7 +42,7 @@ class HomePage extends StatelessWidget {
                         height: 150,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: Colors.white.withOpacity(0.1),
+                          color: Colors.white.withValues(alpha: 0.1),
                         ),
                       ),
                     ),
@@ -54,7 +54,7 @@ class HomePage extends StatelessWidget {
                         height: 100,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: Colors.white.withOpacity(0.05),
+                          color: Colors.white.withValues(alpha: 0.05),
                         ),
                       ),
                     ),
@@ -68,10 +68,10 @@ class HomePage extends StatelessWidget {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
+                              color: Colors.white.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(20),
                               border: Border.all(
-                                color: Colors.white.withOpacity(0.3),
+                                color: Colors.white.withValues(alpha: 0.3),
                                 width: 1,
                               ),
                             ),
@@ -113,7 +113,7 @@ class HomePage extends StatelessWidget {
                           Text(
                             'Join verified group tours with guaranteed refunds',
                             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                  color: Colors.white.withOpacity(0.9),
+                                  color: Colors.white.withValues(alpha: 0.9),
                                 ),
                           ),
                           
@@ -166,7 +166,7 @@ class HomePage extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
-                        color: AppTheme.primaryTeal,
+                        color: AppTheme.primaryBlue,
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
@@ -219,7 +219,7 @@ class HomePage extends StatelessWidget {
         Text(
           label,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Colors.white.withOpacity(0.8),
+                color: Colors.white.withValues(alpha: 0.8),
               ),
         ),
       ],

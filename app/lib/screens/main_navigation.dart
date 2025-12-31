@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../main.dart';
+
 import 'home/home_page.dart';
 import 'my_tours/my_tours_page.dart';
 import 'profile/profile_page.dart';

@@ -5,7 +5,8 @@ class TourModel {
   final String division;
   final int durationDays;
   final int durationNights;
-  final int price;
+  final int price; // Upfront payment
+  final int fullCost; // Total cost
   final double rating;
   final int reviewCount;
   final String imageUrl;
@@ -33,6 +34,7 @@ class TourModel {
     required this.durationDays,
     required this.durationNights,
     required this.price,
+    required this.fullCost,
     required this.rating,
     required this.reviewCount,
     required this.imageUrl,
@@ -68,6 +70,7 @@ class TourModel {
       'durationDays': durationDays,
       'durationNights': durationNights,
       'price': price,
+      'fullCost': fullCost,
       'rating': rating,
       'reviewCount': reviewCount,
       'imageUrl': imageUrl,
@@ -98,6 +101,7 @@ class TourModel {
       durationDays: json['durationDays'],
       durationNights: json['durationNights'],
       price: json['price'],
+      fullCost: json['fullCost'] ?? (json['price'] * 2), // Fallback if missing
       rating: json['rating'],
       reviewCount: json['reviewCount'],
       imageUrl: json['imageUrl'],

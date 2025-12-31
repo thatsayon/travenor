@@ -27,10 +27,10 @@ class BookingService {
       );
 
       await _saveBooking(booking);
-      print('✅ Booking created: ${booking.bookingReference}');
+       // print('✅ Booking created: ${booking.bookingReference}');
       return booking;
     } catch (error) {
-      print('❌ Error creating booking: $error');
+       // print('❌ Error creating booking: $error');
       rethrow;
     }
   }
@@ -60,7 +60,7 @@ class BookingService {
           .map((json) => BookingRequestModel.fromJson(json))
           .toList();
     } catch (error) {
-      print('❌ Error getting bookings: $error');
+       // print('❌ Error getting bookings: $error');
       return [];
     }
   }
@@ -98,10 +98,10 @@ class BookingService {
         final bookingsJson = bookings.map((b) => b.toJson()).toList();
         await prefs.setString(_bookingsKey, jsonEncode(bookingsJson));
         
-        print('✅ Booking status updated: $bookingId -> $newStatus');
+         // print('✅ Booking status updated: $bookingId -> $newStatus');
       }
     } catch (error) {
-      print('❌ Error updating booking status: $error');
+       // print('❌ Error updating booking status: $error');
       rethrow;
     }
   }
@@ -116,9 +116,9 @@ class BookingService {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove(_bookingsKey);
-      print('✅ All bookings cleared');
+       // print('✅ All bookings cleared');
     } catch (error) {
-      print('❌ Error clearing bookings: $error');
+       // print('❌ Error clearing bookings: $error');
     }
   }
 
