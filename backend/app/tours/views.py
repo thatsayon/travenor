@@ -1,6 +1,6 @@
 from rest_framework import generics, permissions
 
-from django.db.models import Count, Sum
+from django.db.models import Count, Sum, Avg
 
 from .models import Tour
 from .serializers import (
@@ -16,16 +16,39 @@ class TourListView(generics.ListAPIView):
         return (
             Tour.objects
             .filter(is_active=True)
-            .select_related("tour_lead")
+            .select_related(
+                "division",
+                "district",
+                "upazila",
+            )
             .annotate(
-                joined_count=Sum("bookings__seats")
+                joined_count=Sum("bookings__seats"),
+                rating_avg=Avg("reviews__rating"),
+                rating_count=Count("reviews"),
             )
             .order_by("-created_at")
         )
 
+
 class TourDetailView(generics.RetrieveAPIView):
-    queryset = Tour.objects.filter(is_active=True).select_related("tour_lead")
-    serializer_class = TourDetailSerializer
     permission_classes = [permissions.AllowAny]
+    serializer_class = TourDetailSerializer
     lookup_field = "slug"
+
+    def get_queryset(self):
+        return (
+            Tour.objects
+            .filter(is_active=True)
+            .select_related(
+                "tour_lead",
+                "division",
+                "district",
+                "upazila",
+            )
+            .annotate(
+                joined_count=Sum("bookings__seats"),
+                rating_avg=Avg("reviews__rating"),
+                rating_count=Count("reviews"),
+            )
+        )
 

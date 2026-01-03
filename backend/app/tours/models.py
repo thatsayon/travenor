@@ -48,6 +48,14 @@ class Tour(BaseModel):
     min_group_size = models.IntegerField(default=12)
     max_capacity = models.IntegerField(default=16)
 
+    start_datetime = models.DateTimeField(
+        help_text="When the tour starts"
+    )
+
+    booking_deadline = models.DateTimeField(
+        help_text="Last time users can book this tour"
+    )
+
     # Meeting details
     meeting_point = models.CharField(max_length=200)
     meeting_time = models.TimeField()
@@ -102,3 +110,27 @@ class TourBooking(BaseModel):
 
     class Meta:
         unique_together = ("tour", "user")
+
+
+
+class TourReview(BaseModel):
+    tour = models.ForeignKey(
+        Tour,
+        on_delete=models.CASCADE,
+        related_name="reviews"
+    )
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE
+    )
+
+    rating = models.PositiveSmallIntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(5)]
+    )
+    comment = models.TextField(blank=True)
+
+    class Meta:
+        unique_together = ("tour", "user")
+
+    def __str__(self):
+        return f"{self.rating}⭐ - {self.tour.title}"
