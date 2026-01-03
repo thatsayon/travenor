@@ -30,6 +30,13 @@ CORS_ALLOWED_ORIGINS = env.list(
     default=[]
 )
 
+# csrf settgings
+CSRF_TRUSTED_ORIGINS = env.list(
+    "CSRF_TRUSTED_ORIGINS",
+    default=[]
+)
+
+
 # Application definition
 
 INSTALLED_APPS = [
