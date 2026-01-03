@@ -12,6 +12,7 @@ from app.accounts.services.google import verify_google_token
 from .serializers import (
     GoogleAuthSerializer,
 ) 
+from .tokens import get_tokens_for_user
 
 User = get_user_model()
 
@@ -56,9 +57,6 @@ class GoogleLoginAPIView(APIView):
             user.set_unusable_password()
             user.save()
 
-        refresh = RefreshToken.for_user(user)
+        tokens = get_tokens_for_user(user)
 
-        return Response({
-            "access": str(refresh.access_token),
-            "refresh": str(refresh)
-        })
+        return Response(tokens, status=status.HTTP_200_OK) 
