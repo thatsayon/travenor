@@ -37,6 +37,8 @@ INSTALLED_APPS = [
 # Local apps
 INSTALLED_APPS += [
     'app.accounts',
+    'app.tours',
+    'app.guides',
 ]
 
 # Third-party
@@ -169,3 +171,7 @@ cloudinary.config(
     api_key = CLOUDINARY_STORAGE['API_KEY'], 
     api_secret = CLOUDINARY_STORAGE['API_SECRET']
 )
+
+# google setup
+GOOGLE_CLIENT_ID = env("GOOGLE_CLIENT_ID")
+

@@ -7,7 +7,11 @@ from django.utils import timezone
 from cloudinary.models import CloudinaryField
 
 from app.common.models import BaseModel
-from app.common.enums import GenderChoices
+from app.common.enums import (
+    GenderChoices, 
+    BloodGroupChoices, 
+    AuthProviderChoices
+)
 
 
 class CustomAccountManager(BaseUserManager):
@@ -34,19 +38,43 @@ class CustomAccountManager(BaseUserManager):
 
         return self.create_user(email, password, **extra_fields)
 
+
 class UserAccount(BaseModel, AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(_("email address"), unique=True)
     username = models.CharField(_("username"), max_length=30, unique=True)
 
     full_name = models.CharField(_("full name"), max_length=50)
-    profile_pic = CloudinaryField(_("profile picture"), blank=True, null=True)
+
+    mobile_number = models.CharField(max_length=20, blank=True, null=True, unique=True)
+    date_of_birth = models.DateField(blank=True, null=True)
+
+    blood_group = models.CharField(
+        max_length=3,
+        choices=BloodGroupChoices.choices,
+        blank=True,
+        null=True,
+    )
+
+    profile_pic = CloudinaryField(blank=True, null=True)
 
     gender = models.CharField(
-        _("gender"),
         max_length=10,
         choices=GenderChoices.choices,
         blank=True,
         null=True,
+    )
+
+    auth_provider = models.CharField(
+        max_length=20,
+        choices=AuthProviderChoices.choices,
+        default=AuthProviderChoices.EMAIL,
+    )
+
+    google_id = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+        unique=True,
     )
 
     is_staff = models.BooleanField(default=False)
@@ -60,10 +88,5 @@ class UserAccount(BaseModel, AbstractBaseUser, PermissionsMixin):
 
     objects = CustomAccountManager()
 
-    class Meta:
-        verbose_name = _("User Account")
-        verbose_name_plural = _("User Accounts")
-        ordering = ["-date_joined"]
-
     def __str__(self):
-        return f"{self.email}"
+        return self.email
