@@ -19,7 +19,9 @@ class GoogleSignInService {
   static const String _tokenKey = 'auth_token'; // Access Token
   static const String _refreshTokenKey = 'refresh_token'; // Refresh Token
 
-  static const String _backendUrl = 'https://travenor-v1.thatsayon.com/auth/google/';
+  // Use 10.0.2.2 for Android emulator (points to host machine's localhost)
+  // Use your computer's IP address (e.g., 192.168.x.x) for physical device
+  static const String _backendUrl = 'http://10.0.2.2:8000/auth/google/';
 
   // Sign in with Google and verify with backend
   Future<UserModel?> signInWithGoogle() async {
@@ -41,8 +43,17 @@ class GoogleSignInService {
       print('✅ Google Sign In successful');
       print('📧 Email: ${account.email}');
       print('👤 Name: ${account.displayName}');
-      print('🔑 FULL ID TOKEN:');
+      print('');
+      print('═══════════════════════════════════════');
+      print('🔑 ID TOKEN START (COPY EVERYTHING BELOW)');
+      print('═══════════════════════════════════════');
       print(idToken);
+      print('═══════════════════════════════════════');
+      print('🔑 ID TOKEN END (COPY EVERYTHING ABOVE)');
+      print('═══════════════════════════════════════');
+      print('');
+      print('📏 Token Length: ${idToken.length} characters');
+      print('📐 Length % 4 = ${idToken.length % 4} (should be 0 for valid base64)');
       print('📤 Sending to backend: $_backendUrl');
       
       final response = await _dio.post(
