@@ -1,14 +1,12 @@
 from datetime import timedelta
 from pathlib import Path
 
-import cloudinary
-import cloudinary.uploader
-import cloudinary.api
 import environ
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 # BASE_DIR = Path(__file__).resolve().parent.parent
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
+environ.Env.read_env(BASE_DIR / ".env")
 
 
 env = environ.Env(
@@ -176,6 +174,10 @@ SIMPLE_JWT = {
 }
 
 # cloudinary setup
+import cloudinary
+import cloudinary.uploader
+import cloudinary.api
+
 CLOUDINARY_STORAGE = {
     'CLOUD_NAME': env('CLOUD_NAME'),
     'API_KEY': env('CLOUDINARY_API_KEY'),
