@@ -90,3 +90,19 @@ class UserAccount(BaseModel, AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return self.email
+
+
+class OTP(BaseModel):
+    user = models.ForeignKey(UserAccount, on_delete=models.CASCADE, related_name="otps")
+    otp = models.CharField(max_length=6)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def is_valid(self, expiry_minutes=5):
+        """Check if OTP is still valid (not expired)."""
+        from datetime import timedelta
+        expiry_time = self.created_at + timedelta(minutes=expiry_minutes)
+        return timezone.now() <= expiry_time
+
+    def __str__(self):
+        return f"{self.user.email} - {self.otp}"
+
