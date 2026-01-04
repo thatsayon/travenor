@@ -190,4 +190,5 @@ cloudinary.config(
 
 # google setup
 GOOGLE_CLIENT_ID = env("GOOGLE_CLIENT_ID")
+GOOGLE_ANDROID_CLIENT_ID = env("GOOGLE_ANDROID_CLIENT_ID")
 

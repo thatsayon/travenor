@@ -9,6 +9,7 @@ def verify_google_token(token: str):
             token,
             requests.Request(),
             settings.GOOGLE_CLIENT_ID,
+            # "726287101564-5psur8st5s5rp95q08q4el74q2n1jml2.apps.googleusercontent.com"
         )
 
         if idinfo["iss"] not in [
