@@ -64,7 +64,6 @@ class AppRoutes {
           settings: settings,
           builder: (_) => ResetPasswordPage(
             email: args?['email'] ?? '',
-            otp: args?['otp'] ?? '',
           ),
         );
 

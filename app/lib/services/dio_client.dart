@@ -6,7 +6,7 @@ class DioClient {
   DioClient()
       : dio = Dio(
           BaseOptions(
-            baseUrl: 'https://api.example.com',
+            baseUrl: 'https://travenor-v1.thatsayon.com',
             connectTimeout: const Duration(seconds: 15),
             receiveTimeout: const Duration(seconds: 15),
             headers: {
@@ -27,7 +27,7 @@ class DioClient {
         responseHeader: true,
         responseBody: true,
         error: true,
-        logPrint: (obj) {},
+        logPrint: (obj) => print(obj),
       ),
     );
   }

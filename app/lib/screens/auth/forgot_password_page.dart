@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../providers/auth_provider.dart';
 import '../../routes/app_routes.dart';
 import '../../widgets/custom_text_field.dart';
 
-class ForgotPasswordPage extends StatefulWidget {
+class ForgotPasswordPage extends ConsumerStatefulWidget {
   const ForgotPasswordPage({super.key});
 
   @override
-  State<ForgotPasswordPage> createState() => _ForgotPasswordPageState();
+  ConsumerState<ForgotPasswordPage> createState() => _ForgotPasswordPageState();
 }
 
-class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
+class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   bool _isLoading = false;
@@ -35,20 +37,31 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     if (_formKey.currentState!.validate()) {
       setState(() => _isLoading = true);
       
-      // Simulate API call
-      await Future.delayed(const Duration(seconds: 1));
+      final success = await ref.read(authProvider.notifier).forgotPassword(
+        _emailController.text.trim(),
+      );
       
       setState(() => _isLoading = false);
       
       if (mounted) {
-        Navigator.pushNamed(
-          context,
-          AppRoutes.otpVerification,
-          arguments: {
-            'email': _emailController.text.trim(),
-            'isPasswordReset': true,
-          },
-        );
+        if (success) {
+          Navigator.pushNamed(
+            context,
+            AppRoutes.otpVerification,
+            arguments: {
+              'email': _emailController.text.trim(),
+              'isPasswordReset': true,
+            },
+          );
+        } else {
+          final authState = ref.read(authProvider);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(authState.errorMessage ?? 'Failed to send OTP'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
       }
     }
   }

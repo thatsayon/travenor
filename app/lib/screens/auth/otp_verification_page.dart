@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../providers/auth_provider.dart';
 import '../../routes/app_routes.dart';
 
-class OtpVerificationPage extends StatefulWidget {
+class OtpVerificationPage extends ConsumerStatefulWidget {
   final String email;
   final bool isPasswordReset;
 
@@ -13,18 +15,19 @@ class OtpVerificationPage extends StatefulWidget {
   });
 
   @override
-  State<OtpVerificationPage> createState() => _OtpVerificationPageState();
+  ConsumerState<OtpVerificationPage> createState() => _OtpVerificationPageState();
 }
 
-class _OtpVerificationPageState extends State<OtpVerificationPage> {
+class _OtpVerificationPageState extends ConsumerState<OtpVerificationPage> {
   final List<TextEditingController> _controllers = List.generate(
-    4,
+    6,  // Changed to 6 digits
     (_) => TextEditingController(),
   );
-  final List<FocusNode> _focusNodes = List.generate(4, (_) => FocusNode());
+  final List<FocusNode> _focusNodes = List.generate(6, (_) => FocusNode());
   bool _isLoading = false;
   int _resendTimer = 30;
   bool _canResend = false;
+  String? _errorMessage;
 
   @override
   void initState() {
@@ -59,10 +62,15 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
   }
 
   void _onOtpChanged(String value, int index) {
-    if (value.length == 1 && index < 3) {
+    if (value.length == 1 && index < 5) {
       _focusNodes[index + 1].requestFocus();
     } else if (value.isEmpty && index > 0) {
       _focusNodes[index - 1].requestFocus();
+    }
+
+    // Clear error when typing
+    if (_errorMessage != null) {
+      setState(() => _errorMessage = null);
     }
 
     // Check if all fields are filled
@@ -73,31 +81,49 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
 
   Future<void> _verifyOtp() async {
     final otp = _controllers.map((c) => c.text).join();
-    if (otp.length != 4) return;
+    if (otp.length != 6) return;
 
-    setState(() => _isLoading = true);
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
 
-    // Simulate API call
-    await Future.delayed(const Duration(seconds: 1));
+    bool success;
+    if (widget.isPasswordReset) {
+      success = await ref.read(authProvider.notifier).forgotPasswordVerifyOTP(otp);
+    } else {
+      success = await ref.read(authProvider.notifier).verifyOTP(otp);
+    }
 
     setState(() => _isLoading = false);
 
     if (mounted) {
-      if (widget.isPasswordReset) {
-        Navigator.pushReplacementNamed(
-          context,
-          AppRoutes.resetPassword,
-          arguments: {'email': widget.email, 'otp': otp},
-        );
+      if (success) {
+        if (widget.isPasswordReset) {
+          Navigator.pushReplacementNamed(
+            context,
+            AppRoutes.resetPassword,
+            arguments: {'email': widget.email},
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Email verified successfully!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          Navigator.pushReplacementNamed(context, AppRoutes.home);
+        }
       } else {
-        // Email verification success - go to home
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Email verified successfully!'),
-            backgroundColor: Colors.green,
-          ),
-        );
-        Navigator.pushReplacementNamed(context, AppRoutes.home);
+        final authState = ref.read(authProvider);
+        setState(() {
+          _errorMessage = authState.errorMessage ?? 'Invalid OTP';
+        });
+        // Clear the OTP fields
+        for (var controller in _controllers) {
+          controller.clear();
+        }
+        _focusNodes[0].requestFocus();
       }
     }
   }
@@ -108,16 +134,21 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
     setState(() {
       _canResend = false;
       _resendTimer = 30;
+      _errorMessage = null;
     });
 
-    // Simulate API call
-    await Future.delayed(const Duration(milliseconds: 500));
+    bool success;
+    if (widget.isPasswordReset) {
+      success = await ref.read(authProvider.notifier).resendForgotPasswordOTP();
+    } else {
+      success = await ref.read(authProvider.notifier).resendOTP();
+    }
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Verification code sent!'),
-          backgroundColor: Color(0xFF0D6EFD),
+        SnackBar(
+          content: Text(success ? 'Verification code sent!' : 'Failed to resend code'),
+          backgroundColor: success ? const Color(0xFF0D6EFD) : Colors.red,
         ),
       );
       _startResendTimer();
@@ -164,9 +195,9 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
               const SizedBox(height: 32),
 
               // Title
-              const Text(
-                'Verify Your Email',
-                style: TextStyle(
+              Text(
+                widget.isPasswordReset ? 'Reset Password' : 'Verify Your Email',
+                style: const TextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.w800,
                   color: Color(0xFF1A1A1A),
@@ -184,7 +215,7 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
                     height: 1.5,
                   ),
                   children: [
-                    const TextSpan(text: 'We sent a 4-digit code to '),
+                    const TextSpan(text: 'We sent a 6-digit code to '),
                     TextSpan(
                       text: widget.email,
                       style: const TextStyle(
@@ -198,13 +229,33 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
 
               const SizedBox(height: 48),
 
-              // OTP Input Fields
+              // Error message
+              if (_errorMessage != null)
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    color: Colors.red.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    _errorMessage!,
+                    style: const TextStyle(
+                      color: Colors.red,
+                      fontSize: 14,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+
+              // OTP Input Fields (6 digits)
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: List.generate(4, (index) {
+                children: List.generate(6, (index) {
                   return SizedBox(
-                    width: 72,
-                    height: 72,
+                    width: 50,
+                    height: 60,
                     child: TextField(
                       controller: _controllers[index],
                       focusNode: _focusNodes[index],
@@ -212,7 +263,7 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
                       keyboardType: TextInputType.number,
                       maxLength: 1,
                       style: const TextStyle(
-                        fontSize: 28,
+                        fontSize: 24,
                         fontWeight: FontWeight.w700,
                         color: Color(0xFF1A1A1A),
                       ),
@@ -221,19 +272,23 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
                         filled: true,
                         fillColor: const Color(0xFFF8FAFC),
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(16),
+                          borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide(color: Colors.grey[300]!),
                         ),
                         enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(16),
+                          borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide(color: Colors.grey[300]!),
                         ),
                         focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(16),
+                          borderRadius: BorderRadius.circular(12),
                           borderSide: const BorderSide(
                             color: Color(0xFF0D6EFD),
                             width: 2,
                           ),
+                        ),
+                        errorBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Colors.red),
                         ),
                       ),
                       inputFormatters: [

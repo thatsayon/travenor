@@ -107,15 +107,29 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
           ),
         );
       }
+      // Navigate to OTP verification after successful registration
+      if (next.isPendingVerification) {
+        Navigator.pushNamed(
+          context,
+          AppRoutes.otpVerification,
+          arguments: {
+            'email': next.pendingEmail ?? _emailController.text.trim(),
+            'isPasswordReset': false,
+          },
+        );
+      }
+      // Navigate to home if already authenticated (e.g., Google Sign-In)
       if (next.isAuthenticated) {
         Navigator.pushReplacementNamed(context, AppRoutes.home);
       }
     });
 
-    return WillPopScope(
-      onWillPop: () async {
-        Navigator.pushReplacementNamed(context, AppRoutes.login);
-        return false;
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) {
+          Navigator.pushReplacementNamed(context, AppRoutes.login);
+        }
       },
       child: Scaffold(
         backgroundColor: Colors.white,
@@ -178,6 +192,17 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
+                          ),
+
+                          const SizedBox(height: 16),
+
+                          // Name field
+                          CustomTextField(
+                            label: 'Full Name',
+                            hint: 'Full Name',
+                            controller: _nameController,
+                            keyboardType: TextInputType.name,
+                            validator: _validateName,
                           ),
 
                           const SizedBox(height: 16),

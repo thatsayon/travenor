@@ -10,7 +10,8 @@ import '../services/secure_storage_service.dart';
 final dioClientProvider = Provider<DioClient>((ref) => DioClient());
 
 final authServiceProvider = Provider<AuthService>((ref) {
-  return AuthService();
+  final dioClient = ref.watch(dioClientProvider);
+  return AuthService(dioClient);
 });
 
 final googleSignInServiceProvider = Provider<GoogleSignInService>(
@@ -24,19 +25,14 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   AuthNotifier(this._authService, this._googleSignInService)
       : super(const AuthState()) {
-    // Check for stored authentication on initialization
     _checkStoredAuth();
   }
 
-  // Check for stored authentication (refresh token)
   Future<void> _checkStoredAuth() async {
     try {
-      // Check if refresh token exists in secure storage
       final hasToken = await SecureStorageService.hasRefreshToken();
       if (hasToken) {
         print('✅ Refresh token found in secure storage');
-        // Note: In a full implementation, we would attempt to refresh the access token here
-        // For now, we just mark as unauthenticated and require manual sign-in
         state = state.copyWith(status: AuthStatus.unauthenticated);
       } else {
         print('ℹ️ No refresh token found - user needs to sign in');
@@ -46,7 +42,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  // Set authenticated user (useful for testing/mocking)
   void setAuthenticatedUser(UserModel user) {
     state = state.copyWith(
       status: AuthStatus.authenticated,
@@ -54,17 +49,38 @@ class AuthNotifier extends StateNotifier<AuthState> {
     );
   }
 
-  // Sign In with Email & Password (for future use)
+  /// Sign In with Email & Password
   Future<void> signIn(String email, String password) async {
     state = state.copyWith(status: AuthStatus.loading);
 
     try {
-      final user = await _authService.signIn(email, password);
-      state = state.copyWith(
-        status: AuthStatus.authenticated,
-        user: user,
-        errorMessage: null,
+      final response = await _authService.login(
+        email: email,
+        password: password,
       );
+
+      if (response.success && response.accessToken != null) {
+        // Save refresh token
+        if (response.refreshToken != null) {
+          await SecureStorageService.saveRefreshToken(response.refreshToken!);
+        }
+
+        state = state.copyWith(
+          status: AuthStatus.authenticated,
+          accessToken: response.accessToken,
+          refreshToken: response.refreshToken,
+          user: UserModel(
+            email: email,
+            name: email.split('@')[0],
+          ),
+          errorMessage: null,
+        );
+      } else {
+        state = state.copyWith(
+          status: AuthStatus.error,
+          errorMessage: response.error ?? 'Login failed',
+        );
+      }
     } catch (e) {
       state = state.copyWith(
         status: AuthStatus.error,
@@ -73,7 +89,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  // Sign Up (for future use)
+  /// Sign Up - returns verification token for OTP flow
   Future<void> signUp({
     required String name,
     required String email,
@@ -82,16 +98,25 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = state.copyWith(status: AuthStatus.loading);
 
     try {
-      final user = await _authService.signUp(
-        name: name,
+      final response = await _authService.register(
         email: email,
         password: password,
+        fullName: name,
       );
-      state = state.copyWith(
-        status: AuthStatus.authenticated,
-        user: user,
-        errorMessage: null,
-      );
+
+      if (response.success && response.verificationToken != null) {
+        state = state.copyWith(
+          status: AuthStatus.pendingVerification,
+          verificationToken: response.verificationToken,
+          pendingEmail: email,
+          errorMessage: null,
+        );
+      } else {
+        state = state.copyWith(
+          status: AuthStatus.error,
+          errorMessage: response.error ?? response.message,
+        );
+      }
     } catch (e) {
       state = state.copyWith(
         status: AuthStatus.error,
@@ -100,7 +125,188 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  // Sign In with Google
+  /// Verify OTP for registration
+  Future<bool> verifyOTP(String otp) async {
+    if (state.verificationToken == null) {
+      state = state.copyWith(
+        status: AuthStatus.error,
+        errorMessage: 'No verification token found',
+      );
+      return false;
+    }
+
+    state = state.copyWith(status: AuthStatus.loading);
+
+    try {
+      final response = await _authService.verifyOTP(
+        otp: otp,
+        verificationToken: state.verificationToken!,
+      );
+
+      if (response.success && response.accessToken != null) {
+        if (response.refreshToken != null) {
+          await SecureStorageService.saveRefreshToken(response.refreshToken!);
+        }
+
+        state = state.copyWith(
+          status: AuthStatus.authenticated,
+          accessToken: response.accessToken,
+          refreshToken: response.refreshToken,
+          verificationToken: null,
+          user: UserModel(
+            email: state.pendingEmail ?? '',
+            name: state.pendingEmail?.split('@')[0] ?? '',
+          ),
+          errorMessage: null,
+        );
+        return true;
+      } else {
+        state = state.copyWith(
+          status: AuthStatus.pendingVerification,
+          errorMessage: response.error ?? 'OTP verification failed',
+        );
+        return false;
+      }
+    } catch (e) {
+      state = state.copyWith(
+        status: AuthStatus.pendingVerification,
+        errorMessage: e.toString(),
+      );
+      return false;
+    }
+  }
+
+  /// Resend registration OTP
+  Future<bool> resendOTP() async {
+    if (state.verificationToken == null) return false;
+
+    try {
+      final response = await _authService.resendRegistrationOTP(
+        verificationToken: state.verificationToken!,
+      );
+      return response.success;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /// Forgot password - request OTP
+  Future<bool> forgotPassword(String email) async {
+    state = state.copyWith(status: AuthStatus.loading);
+
+    try {
+      final response = await _authService.forgotPassword(email: email);
+
+      if (response.success && response.passResetToken != null) {
+        state = state.copyWith(
+          status: AuthStatus.unauthenticated,
+          passResetToken: response.passResetToken,
+          pendingEmail: email,
+          errorMessage: null,
+        );
+        return true;
+      } else {
+        state = state.copyWith(
+          status: AuthStatus.error,
+          errorMessage: response.error ?? response.message,
+        );
+        return false;
+      }
+    } catch (e) {
+      state = state.copyWith(
+        status: AuthStatus.error,
+        errorMessage: e.toString(),
+      );
+      return false;
+    }
+  }
+
+  /// Verify forgot password OTP
+  Future<bool> forgotPasswordVerifyOTP(String otp) async {
+    if (state.passResetToken == null) return false;
+
+    state = state.copyWith(status: AuthStatus.loading);
+
+    try {
+      final response = await _authService.forgotPasswordVerifyOTP(
+        otp: otp,
+        passResetToken: state.passResetToken!,
+      );
+
+      if (response.success && response.passwordResetVerified != null) {
+        state = state.copyWith(
+          status: AuthStatus.pendingPasswordReset,
+          passwordResetVerified: response.passwordResetVerified,
+          passResetToken: null,
+          errorMessage: null,
+        );
+        return true;
+      } else {
+        state = state.copyWith(
+          status: AuthStatus.unauthenticated,
+          errorMessage: response.error ?? response.message,
+        );
+        return false;
+      }
+    } catch (e) {
+      state = state.copyWith(
+        status: AuthStatus.unauthenticated,
+        errorMessage: e.toString(),
+      );
+      return false;
+    }
+  }
+
+  /// Reset password
+  Future<bool> resetPassword(String newPassword) async {
+    if (state.passwordResetVerified == null) return false;
+
+    state = state.copyWith(status: AuthStatus.loading);
+
+    try {
+      final response = await _authService.resetPassword(
+        newPassword: newPassword,
+        passwordResetVerified: state.passwordResetVerified!,
+      );
+
+      if (response.success) {
+        state = state.copyWith(
+          status: AuthStatus.unauthenticated,
+          passwordResetVerified: null,
+          errorMessage: null,
+        );
+        return true;
+      } else {
+        state = state.copyWith(
+          status: AuthStatus.pendingPasswordReset,
+          errorMessage: response.error ?? response.message,
+        );
+        return false;
+      }
+    } catch (e) {
+      state = state.copyWith(
+        status: AuthStatus.pendingPasswordReset,
+        errorMessage: e.toString(),
+      );
+      return false;
+    }
+  }
+
+  /// Resend forgot password OTP
+  Future<bool> resendForgotPasswordOTP() async {
+    if (state.passResetToken == null) return false;
+
+    try {
+      final response = await _authService.resendForgotPasswordOTP(
+        passResetToken: state.passResetToken!,
+      );
+      return response.success;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /// Sign In with Google
   Future<void> signInWithGoogle() async {
     state = state.copyWith(status: AuthStatus.loading);
 
@@ -108,18 +314,17 @@ class AuthNotifier extends StateNotifier<AuthState> {
       final result = await _googleSignInService.signInWithGoogle();
       
       if (result != null) {
-        // Save refresh token to secure storage
         await SecureStorageService.saveRefreshToken(result.tokens.refreshToken);
         
-        // Update state with user and access token (in memory)
         state = state.copyWith(
           status: AuthStatus.authenticated,
           user: result.user,
           accessToken: result.tokens.accessToken,
+          refreshToken: result.tokens.refreshToken,
           errorMessage: null,
         );
         
-        print('✅ Tokens stored securely - Access: in-memory, Refresh: secure storage');
+        print('✅ Google sign-in successful');
       } else {
         state = state.copyWith(
           status: AuthStatus.unauthenticated,
@@ -134,19 +339,20 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  // Sign Out
+  /// Sign Out
   Future<void> signOut() async {
     try {
-      await _authService.signOut();
       await _googleSignInService.signOut();
-      
-      // Clear refresh token from secure storage
       await SecureStorageService.deleteRefreshToken();
       
       state = const AuthState(
         status: AuthStatus.unauthenticated,
         user: null,
         accessToken: null,
+        refreshToken: null,
+        verificationToken: null,
+        passResetToken: null,
+        passwordResetVerified: null,
       );
       
       print('✅ User signed out - all tokens cleared');
@@ -158,7 +364,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  // Clear Error
+  /// Clear Error
   void clearError() {
     state = state.copyWith(
       status: AuthStatus.unauthenticated,
