@@ -1,6 +1,7 @@
 from django.contrib import admin
+
 from .models import (
-    UserAccount,
+    TourGuide,
 )
 
-admin.site.register(UserAccount)
+admin.site.register(TourGuide)

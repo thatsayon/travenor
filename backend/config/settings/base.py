@@ -22,6 +22,20 @@ SECRET_KEY = env("SECRET_KEY")
 DEBUG = env("DEBUG")
 ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=[])
 
+# cors settings
+CORS_ALLOW_CREDENTIALS = True
+
+CORS_ALLOWED_ORIGINS = env.list(
+    "CORS_ALLOWED_ORIGINS",
+    default=[]
+)
+
+# csrf settgings
+CSRF_TRUSTED_ORIGINS = env.list(
+    "CSRF_TRUSTED_ORIGINS",
+    default=[]
+)
+
 
 # Application definition
 
@@ -37,6 +51,8 @@ INSTALLED_APPS = [
 # Local apps
 INSTALLED_APPS += [
     'app.accounts',
+    'app.tours',
+    'app.guides',
 ]
 
 # Third-party
@@ -45,10 +61,12 @@ INSTALLED_APPS += [
     'rest_framework.authtoken',
     'cloudinary',
     'cloudinary_storage',
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    "corsheaders.middleware.CorsMiddleware",
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -169,3 +187,7 @@ cloudinary.config(
     api_key = CLOUDINARY_STORAGE['API_KEY'], 
     api_secret = CLOUDINARY_STORAGE['API_SECRET']
 )
+
+# google setup
+GOOGLE_CLIENT_ID = env("GOOGLE_CLIENT_ID")
+
