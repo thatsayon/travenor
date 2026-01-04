@@ -4,6 +4,7 @@ import '../models/user_model.dart';
 import '../services/auth_service.dart';
 import '../services/dio_client.dart';
 import '../services/google_sign_in_service.dart';
+import '../services/secure_storage_service.dart';
 
 // Providers for services
 final dioClientProvider = Provider<DioClient>((ref) => DioClient());
@@ -27,19 +28,21 @@ class AuthNotifier extends StateNotifier<AuthState> {
     _checkStoredAuth();
   }
 
-  // Check for stored authentication
+  // Check for stored authentication (refresh token)
   Future<void> _checkStoredAuth() async {
     try {
-      final user = await _googleSignInService.getStoredUser();
-      if (user != null) {
-        state = state.copyWith(
-          status: AuthStatus.authenticated,
-          user: user,
-        );
-        // print('✅ Restored user session: ${user.name}');
+      // Check if refresh token exists in secure storage
+      final hasToken = await SecureStorageService.hasRefreshToken();
+      if (hasToken) {
+        print('✅ Refresh token found in secure storage');
+        // Note: In a full implementation, we would attempt to refresh the access token here
+        // For now, we just mark as unauthenticated and require manual sign-in
+        state = state.copyWith(status: AuthStatus.unauthenticated);
+      } else {
+        print('ℹ️ No refresh token found - user needs to sign in');
       }
     } catch (e) {
-      // print('❌ Error checking stored auth: $e');
+      print('❌ Error checking stored auth: $e');
     }
   }
 
@@ -102,14 +105,21 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = state.copyWith(status: AuthStatus.loading);
 
     try {
-      final user = await _googleSignInService.signInWithGoogle();
+      final result = await _googleSignInService.signInWithGoogle();
       
-      if (user != null) {
+      if (result != null) {
+        // Save refresh token to secure storage
+        await SecureStorageService.saveRefreshToken(result.tokens.refreshToken);
+        
+        // Update state with user and access token (in memory)
         state = state.copyWith(
           status: AuthStatus.authenticated,
-          user: user,
+          user: result.user,
+          accessToken: result.tokens.accessToken,
           errorMessage: null,
         );
+        
+        print('✅ Tokens stored securely - Access: in-memory, Refresh: secure storage');
       } else {
         state = state.copyWith(
           status: AuthStatus.unauthenticated,
@@ -126,9 +136,26 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   // Sign Out
   Future<void> signOut() async {
-    await _authService.signOut();
-    await _googleSignInService.signOut();
-    state = const AuthState(status: AuthStatus.unauthenticated);
+    try {
+      await _authService.signOut();
+      await _googleSignInService.signOut();
+      
+      // Clear refresh token from secure storage
+      await SecureStorageService.deleteRefreshToken();
+      
+      state = const AuthState(
+        status: AuthStatus.unauthenticated,
+        user: null,
+        accessToken: null,
+      );
+      
+      print('✅ User signed out - all tokens cleared');
+    } catch (e) {
+      state = state.copyWith(
+        status: AuthStatus.error,
+        errorMessage: e.toString(),
+      );
+    }
   }
 
   // Clear Error

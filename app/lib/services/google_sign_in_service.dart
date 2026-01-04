@@ -2,7 +2,8 @@ import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import '../models/user_model.dart';
-import '../utils/app_storage.dart';
+import '../models/token_pair.dart';
+import '../models/google_sign_in_result.dart';
 
 class GoogleSignInService {
   final GoogleSignIn _googleSignIn = GoogleSignIn(
@@ -15,16 +16,12 @@ class GoogleSignInService {
 
   final Dio _dio = Dio();
 
-  static const String _userDataKey = 'user_data';
-  static const String _tokenKey = 'auth_token'; // Access Token
-  static const String _refreshTokenKey = 'refresh_token'; // Refresh Token
-
-  // Use 10.0.2.2 for Android emulator (points to host machine's localhost)
-  // Use your computer's IP address (e.g., 192.168.x.x) for physical device
+  // Local development: 10.0.2.2 for emulator, or use your computer's IP for physical device
   static const String _backendUrl = 'http://10.0.2.2:8000/auth/google/';
 
-  // Sign in with Google and verify with backend
-  Future<UserModel?> signInWithGoogle() async {
+  /// Sign in with Google and exchange ID token with backend
+  /// Returns GoogleSignInResult containing user and tokens, or null if cancelled
+  Future<GoogleSignInResult?> signInWithGoogle() async {
     try {
       // 1. Google Sign In
       final GoogleSignInAccount? account = await _googleSignIn.signIn();
@@ -90,15 +87,17 @@ class GoogleSignInService {
           name: account.displayName ?? '',
           email: account.email,
           photoUrl: account.photoUrl,
-          token: accessToken, 
+          token: null, // Token no longer stored in UserModel
         );
 
-        await _saveUserData(user);
-        await _saveRefreshToken(refreshToken);
-        _saveAuthState(true);
+        final tokens = TokenPair(
+          accessToken: accessToken,
+          refreshToken: refreshToken,
+        );
 
-        print('✅ User authenticated and saved');
-        return user;
+        print('✅ User authenticated - returning result');
+        
+        return GoogleSignInResult(user: user, tokens: tokens);
       } else {
         print('❌ Backend Error: ${response.statusCode}');
         print('❌ Error Details: ${response.data}');
@@ -112,148 +111,18 @@ class GoogleSignInService {
     }
   }
 
-  // Save user data to local storage
-  Future<void> _saveUserData(UserModel user) async {
-    try {
-      final prefs = AppStorage.prefs;
-      final userData = {
-        'id': user.id,
-        'name': user.name,
-        'email': user.email,
-        'photoUrl': user.photoUrl,
-        'token': user.token,
-      };
-      await prefs.setString(_userDataKey, jsonEncode(userData));
-      if (user.token != null) {
-        await prefs.setString(_tokenKey, user.token!);
-      }
-    } catch (error) {
-      // Silently fail
-    }
-  }
-
-  // Save refresh token
-  Future<void> _saveRefreshToken(String token) async {
-    try {
-      await AppStorage.prefs.setString(_refreshTokenKey, token);
-    } catch (error) {
-      // Silently fail
-    }
-  }
-
-  // Save authentication state
-  void _saveAuthState(bool isAuthenticated) {
-    try {
-      AppStorage.prefs.setBool('is_authenticated', isAuthenticated);
-    } catch (error) {
-      // Silently fail
-    }
-  }
-
-  // Get stored user data (synchronous)
-  UserModel? getStoredUserSync() {
-    try {
-      final prefs = AppStorage.prefs;
-      final isAuthenticated = prefs.getBool('is_authenticated') ?? false;
-      
-      if (!isAuthenticated) {
-        return null;
-      }
-
-      final userDataString = prefs.getString(_userDataKey);
-      if (userDataString == null) {
-        return null;
-      }
-
-      final userData = jsonDecode(userDataString);
-      return UserModel(
-        id: userData['id'],
-        name: userData['name'],
-        email: userData['email'],
-        photoUrl: userData['photoUrl'],
-        token: userData['token'],
-      );
-    } catch (error) {
-      return null;
-    }
-  }
-
-  // Legacy async method for compatibility
-  Future<UserModel?> getStoredUser() async {
-    return getStoredUserSync();
-  }
-
-  // Check if user is authenticated (synchronous)
-  bool isAuthenticatedSync() {
-    try {
-      return AppStorage.prefs.getBool('is_authenticated') ?? false;
-    } catch (error) {
-      return false;
-    }
-  }
-
-  Future<bool> isAuthenticated() async {
-    return isAuthenticatedSync();
-  }
-
-  // Get stored access token (synchronous)
-  String? getStoredTokenSync() {
-    try {
-      return AppStorage.prefs.getString(_tokenKey);
-    } catch (error) {
-      return null;
-    }
-  }
-  
-  // Get stored refresh token (synchronous)
-  String? getStoredRefreshTokenSync() {
-    try {
-      return AppStorage.prefs.getString(_refreshTokenKey);
-    } catch (error) {
-      return null;
-    }
-  }
-
-  Future<String?> getStoredToken() async {
-    return getStoredTokenSync();
-  }
-
-  // Sign out
+  /// Sign out from Google
   Future<void> signOut() async {
     try {
       await _googleSignIn.signOut();
-      
-      final prefs = AppStorage.prefs;
-      await prefs.remove(_userDataKey);
-      await prefs.remove(_tokenKey);
-      await prefs.remove(_refreshTokenKey);
-      await prefs.setBool('is_authenticated', false);
-    } catch (error) {
-      // Silently fail
+      print('✅ Google Sign Out successful');
+    } catch (e) {
+      print('❌ Google Sign Out failed: $e');
     }
   }
 
-  // Check if current user exists (auto-login check)
-  Future<UserModel?> getCurrentUser() async {
-    try {
-      // 1. Check local storage first
-      final storedUser = getStoredUserSync();
-      if (storedUser != null) {
-        return storedUser;
-      }
-      return null;
-
-      // Note: We REMOVED silent Google sign-in here because if we depend on backend JWT,
-      // we can't just silently sign in with Google and get a valid JWT without calling backend again.
-      // If we need to refresh the token, we should do it via refresh token endpoint logic 
-      // which creates a new Access Token. 
-      // For now, if local storage is empty, we consider user logged out.
-      // If we wanted to persistent login across installs (silent sign in), we'd need to:
-      // 1. Silent Google Sign In
-      // 2. Call backend again to get new JWTs
-      // BUT, usually persisted JWTs (Access/Refresh) are enough.
-    } catch (error) {
-      return null;
-    }
+  /// Check if user is currently signed in with Google
+  Future<bool> isSignedIn() async {
+    return await _googleSignIn.isSignedIn();
   }
 }
