@@ -16,8 +16,8 @@ class GoogleSignInService {
 
   final Dio _dio = Dio();
 
-  // Local development: 10.0.2.2 for emulator, or use your computer's IP for physical device
-  static const String _backendUrl = 'http://10.0.2.2:8000/auth/google/';
+  // Production URL
+  static const String _backendUrl = 'https://travenor.projectyard.top/auth/google/';
 
   /// Sign in with Google and exchange ID token with backend
   /// Returns GoogleSignInResult containing user and tokens, or null if cancelled
@@ -101,13 +101,59 @@ class GoogleSignInService {
       } else {
         print('❌ Backend Error: ${response.statusCode}');
         print('❌ Error Details: ${response.data}');
-        throw Exception('Login Failed: ${response.statusCode}. ${response.data}');
+        
+        String cleanMessage = 'Something went wrong, please try again.';
+        
+        if (response.statusCode! >= 500) {
+          cleanMessage = 'Server error. Please try again later.';
+        } else {
+          // Try to extract useful message from backend JSON
+          try {
+            if (response.data is Map<String, dynamic>) {
+              final data = response.data as Map<String, dynamic>;
+              if (data.containsKey('detail')) {
+                cleanMessage = data['detail'].toString();
+              } else if (data.containsKey('message')) {
+                cleanMessage = data['message'].toString();
+              } else if (data.containsKey('error')) {
+                cleanMessage = data['error'].toString();
+              } else if (data.containsKey('non_field_errors')) {
+                final errors = data['non_field_errors'];
+                if (errors is List && errors.isNotEmpty) {
+                  cleanMessage = errors.first.toString();
+                }
+              }
+            } else if (response.data is String) {
+                // If it's a short string, use it. If HTML, ignore it.
+                final String body = response.data;
+                if (body.length < 100 && !body.trim().startsWith('<')) {
+                   cleanMessage = body;
+                }
+            }
+          } catch (_) {
+            // parsing failed, keep default message
+          }
+        }
+        
+        throw AuthException(cleanMessage);
       }
     } catch (error) {
       print('💥 Exception caught: $error');
-      // Rethrow if it's already an exception, or wrap new one
-      if (error is Exception) rethrow;
-      throw Exception('Sign In Error: $error');
+      
+      if (error is AuthException) rethrow;
+
+      if (error is DioException) {
+         if (error.type == DioExceptionType.connectionTimeout || 
+             error.type == DioExceptionType.receiveTimeout ||
+             error.type == DioExceptionType.sendTimeout) {
+            throw AuthException('Connection timed out. Please check your internet.');
+         }
+         if (error.type == DioExceptionType.connectionError) {
+            throw AuthException('No internet connection.');
+         }
+      }
+      
+      throw AuthException('Sign In unexpected error. Please try again.');
     }
   }
 
@@ -125,4 +171,11 @@ class GoogleSignInService {
   Future<bool> isSignedIn() async {
     return await _googleSignIn.isSignedIn();
   }
+}
+
+class AuthException implements Exception {
+  final String message;
+  AuthException(this.message);
+  @override
+  String toString() => message;
 }

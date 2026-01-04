@@ -4,6 +4,18 @@ DEBUG = True
 
 ALLOWED_HOSTS = ["*"]
 
+# Allow Cloudflare tunnel and local requests
+CORS_ALLOWED_ORIGINS = [
+    "https://travenor.projectyard.top",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://travenor.projectyard.top",
+    "http://localhost:3000",
+]
+
 # Use SQLite for local development
 DATABASES = {
     "default": {

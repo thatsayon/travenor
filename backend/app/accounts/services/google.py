@@ -4,14 +4,40 @@ from django.conf import settings
 
 
 def verify_google_token(token: str):
-    try:
-        idinfo = id_token.verify_oauth2_token(
-            token,
-            requests.Request(),
-            settings.GOOGLE_CLIENT_ID,
-            # "726287101564-5psur8st5s5rp95q08q4el74q2n1jml2.apps.googleusercontent.com"
-        )
+    """
+    Verify Google OAuth2 token against both web and Android client IDs.
+    This allows tokens from both platforms to be accepted.
+    """
+    # Build list of client IDs to try (Android first if available, then web)
+    client_ids = []
+    android_client_id = getattr(settings, 'GOOGLE_ANDROID_CLIENT_ID', None)
+    if android_client_id:
+        client_ids.append(android_client_id)
+    client_ids.append(settings.GOOGLE_CLIENT_ID) 
+    
+    if not client_ids:
+        return None
+    
+    # Try verifying with each client ID
+    idinfo = None
+    for client_id in client_ids:
+        try:
+            idinfo = id_token.verify_oauth2_token(
+                token,
+                requests.Request(),
+                client_id,
+            )
+            # If verification succeeds, break out of loop
+            break
+        except ValueError:
+            # If this client ID fails, try the next one
+            continue
+    
+    if idinfo is None:
+        # If all client IDs fail, return None
+        return None
 
+    try:
         if idinfo["iss"] not in [
             "accounts.google.com",
             "https://accounts.google.com",

@@ -20,6 +20,10 @@ SECRET_KEY = env("SECRET_KEY")
 DEBUG = env("DEBUG")
 ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=[])
 
+# google setup
+GOOGLE_CLIENT_ID = env("GOOGLE_CLIENT_ID")
+GOOGLE_ANDROID_CLIENT_ID = env("GOOGLE_ANDROID_CLIENT_ID")
+
 # cors settings
 CORS_ALLOW_CREDENTIALS = True
 
@@ -190,7 +194,5 @@ cloudinary.config(
     api_secret = CLOUDINARY_STORAGE['API_SECRET']
 )
 
-# google setup
-GOOGLE_CLIENT_ID = env("GOOGLE_CLIENT_ID")
-GOOGLE_ANDROID_CLIENT_ID = env("GOOGLE_ANDROID_CLIENT_ID")
+
 
