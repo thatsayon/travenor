@@ -1,4 +1,4 @@
-package com.example.app
+package com.travenor
 
 import io.flutter.embedding.android.FlutterActivity
 

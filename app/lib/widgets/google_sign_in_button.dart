@@ -14,40 +14,48 @@ class GoogleSignInButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return SizedBox(
       width: double.infinity,
-      height: 56,
+      height: 52,
       child: OutlinedButton(
         onPressed: isLoading ? null : onPressed,
         style: OutlinedButton.styleFrom(
-          side: BorderSide(color: Colors.grey[300]!, width: 1.5),
+          side: BorderSide(color: Colors.grey[300]!, width: 1),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
+          backgroundColor: Colors.white,
         ),
         child: isLoading
             ? const SizedBox(
-                height: 24,
-                width: 24,
+                height: 22,
+                width: 22,
                 child: CircularProgressIndicator(strokeWidth: 2),
               )
             : Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Image.network(
-                    'https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg',
+                  Image.asset(
+                    'assets/images/google_logo.png',
                     height: 24,
                     width: 24,
                     errorBuilder: (context, error, stackTrace) {
-                      return const Icon(Icons.g_mobiledata, size: 32);
+                      // Fallback to text if asset fails
+                      return const Text(
+                        'G',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF4285F4),
+                        ),
+                      );
                     },
                   ),
                   const SizedBox(width: 12),
                   const Text(
                     'Continue with Google',
                     style: TextStyle(
-                      fontSize: 16,
+                      fontSize: 15,
                       fontWeight: FontWeight.w600,
                       color: Color(0xFF1A1A1A),
-                      letterSpacing: 0.3,
                     ),
                   ),
                 ],

@@ -4,16 +4,21 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'routes/app_routes.dart';
+import 'utils/app_storage.dart';
 
 void main() async {
+  // Preserve native splash until we manually remove it
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
+  
+  // Pre-load SharedPreferences for instant access later (runs in parallel with UI init)
+  await AppStorage.init();
   
   // Set system UI overlay style
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
-      statusBarIconBrightness: Brightness.dark,
+      statusBarIconBrightness: Brightness.light,
     ),
   );
   
@@ -57,6 +62,7 @@ class AppTheme {
     
     return ThemeData(
       useMaterial3: true,
+      fontFamily: GoogleFonts.inter().fontFamily,
       primaryColor: primaryBlue,
       scaffoldBackgroundColor: backgroundWhite,
       colorScheme: const ColorScheme.light(

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'home/home_page.dart';
 import 'my_tours/my_tours_page.dart';
 import 'profile/profile_page.dart';
@@ -13,6 +14,13 @@ class MainNavigation extends StatefulWidget {
 
 class _MainNavigationState extends State<MainNavigation> {
   int _currentIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    // Remove splash screen when app is ready
+    FlutterNativeSplash.remove();
+  }
 
   final List<Widget> _pages = const [
     HomePage(),

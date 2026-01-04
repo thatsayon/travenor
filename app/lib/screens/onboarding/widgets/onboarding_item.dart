@@ -18,50 +18,61 @@ class OnboardingItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
+        // Image with consistent padding and rounded corners
         Expanded(
           flex: 5,
-          child: Stack(
-            children: [
-              // Image
-              ClipRRect(
-                borderRadius: const BorderRadius.vertical(
-                  bottom: Radius.circular(32),
-                ),
-                child: Image.asset(
-                  image,
-                  fit: BoxFit.cover,
-                  width: double.infinity,
-                  height: double.infinity,
-                ),
-              ),
-              
-              // Gradient overlay for better text contrast
-              Positioned(
-                bottom: 0,
-                left: 0,
-                right: 0,
-                child: Container(
-                  height: 120,
-                  decoration: BoxDecoration(
-                    borderRadius: const BorderRadius.vertical(
-                      bottom: Radius.circular(32),
-                    ),
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        Colors.transparent,
-                        Colors.black.withValues(alpha: 0.3),
-                      ],
-                    ),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(28),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.15),
+                    blurRadius: 20,
+                    offset: const Offset(0, 8),
                   ),
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(28),
+                child: Stack(
+                  children: [
+                    // Image
+                    Positioned.fill(
+                      child: Image.asset(
+                        image,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                    
+                    // Gradient overlay for depth
+                    Positioned(
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      child: Container(
+                        height: 100,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Colors.transparent,
+                              Colors.black.withOpacity(0.25),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ],
+            ),
           ),
         ),
         
-        const Spacer(flex: 1),
+        const SizedBox(height: 32),
 
         // Title with highlighted word
         Padding(
@@ -70,10 +81,10 @@ class OnboardingItem extends StatelessWidget {
             textAlign: TextAlign.center,
             text: TextSpan(
               style: const TextStyle(
-                fontSize: 32,
+                fontSize: 30,
                 fontWeight: FontWeight.w800,
                 color: Color(0xFF1A1A1A),
-                height: 1.2,
+                height: 1.25,
                 letterSpacing: -0.5,
               ),
               children: [
@@ -81,7 +92,7 @@ class OnboardingItem extends StatelessWidget {
                 TextSpan(
                   text: highlight,
                   style: const TextStyle(
-                    color: Color(0xFF0A6CFF),
+                    color: Color(0xFF0D6EFD),
                     fontWeight: FontWeight.w900,
                   ),
                 ),
@@ -94,21 +105,21 @@ class OnboardingItem extends StatelessWidget {
 
         // Description
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 32),
+          padding: const EdgeInsets.symmetric(horizontal: 40),
           child: Text(
             description,
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: 16,
+              fontSize: 15,
               color: Colors.grey[600],
               height: 1.6,
               fontWeight: FontWeight.w400,
-              letterSpacing: 0.2,
+              letterSpacing: 0.1,
             ),
           ),
         ),
         
-        const Spacer(flex: 1),
+        const SizedBox(height: 24),
       ],
     );
   }

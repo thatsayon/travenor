@@ -1,62 +1,110 @@
-import 'package:google_sign_in/google_sign_in.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
+import 'package:dio/dio.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import '../models/user_model.dart';
+import '../utils/app_storage.dart';
 
 class GoogleSignInService {
   final GoogleSignIn _googleSignIn = GoogleSignIn(
     scopes: [
       'email',
       'profile',
+      'openid', // Explicitly request openid for ID token
     ],
   );
 
-  static const String _userDataKey = 'user_data';
-  static const String _tokenKey = 'auth_token';
-  static const String _isAuthenticatedKey = 'is_authenticated';
+  final Dio _dio = Dio();
 
-  // Sign in with Google
+  static const String _userDataKey = 'user_data';
+  static const String _tokenKey = 'auth_token'; // Access Token
+  static const String _refreshTokenKey = 'refresh_token'; // Refresh Token
+
+  static const String _backendUrl = 'https://travenor-v1.thatsayon.com/auth/google/';
+
+  // Sign in with Google and verify with backend
   Future<UserModel?> signInWithGoogle() async {
     try {
+      // 1. Google Sign In
       final GoogleSignInAccount? account = await _googleSignIn.signIn();
       
       if (account == null) {
-         // print('Google Sign-In cancelled by user');
-        return null;
+        return null; // User cancelled
       }
 
       final GoogleSignInAuthentication auth = await account.authentication;
+      final String? idToken = auth.idToken;
+
+      if (idToken == null) {
+        throw Exception('Failed to retrieve Google ID Token');
+      }
+
+      print('✅ Google Sign In successful');
+      print('📧 Email: ${account.email}');
+      print('👤 Name: ${account.displayName}');
+      print('🔑 FULL ID TOKEN:');
+      print(idToken);
+      print('📤 Sending to backend: $_backendUrl');
       
-      // Create user model from Google account data
-      final user = UserModel(
-        id: account.id,
-        name: account.displayName ?? '',
-        email: account.email,
-        photoUrl: account.photoUrl,
-        token: auth.idToken,
+      final response = await _dio.post(
+        _backendUrl,
+        data: {
+          'token': idToken,
+        },
+        options: Options(
+          validateStatus: (status) => true, // capture all statuses
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        ),
       );
 
-      // Store user data and token locally
-      await _saveUserData(user);
-      await _saveAuthState(true);
+      print('📥 Backend Response Status: ${response.statusCode}');
+      print('📥 Backend Response Body: ${response.data}');
 
-       // print('✅ Google Sign-In Success:');
-       // print('  Name: ${user.name}');
-       // print('  Email: ${user.email}');
-       // print('  Photo URL: ${user.photoUrl}');
-       // print('  Stored locally');
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = response.data;
+        if (data == null) throw Exception('Backend returned empty data');
+        
+        final String? accessToken = data['access'];
+        final String? refreshToken = data['refresh'];
+        
+        if (accessToken == null || refreshToken == null) {
+          throw Exception('Backend missing tokens. Got: ${data.keys.join(", ")}');
+        }
 
-      return user;
+        print('✅ Tokens received successfully!');
+        
+        final user = UserModel(
+          id: account.id,
+          name: account.displayName ?? '',
+          email: account.email,
+          photoUrl: account.photoUrl,
+          token: accessToken, 
+        );
+
+        await _saveUserData(user);
+        await _saveRefreshToken(refreshToken);
+        _saveAuthState(true);
+
+        print('✅ User authenticated and saved');
+        return user;
+      } else {
+        print('❌ Backend Error: ${response.statusCode}');
+        print('❌ Error Details: ${response.data}');
+        throw Exception('Login Failed: ${response.statusCode}. ${response.data}');
+      }
     } catch (error) {
-       // print('❌ Google Sign-In Error: $error');
-      return null;
+      print('💥 Exception caught: $error');
+      // Rethrow if it's already an exception, or wrap new one
+      if (error is Exception) rethrow;
+      throw Exception('Sign In Error: $error');
     }
   }
 
   // Save user data to local storage
   Future<void> _saveUserData(UserModel user) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = AppStorage.prefs;
       final userData = {
         'id': user.id,
         'name': user.name,
@@ -69,25 +117,33 @@ class GoogleSignInService {
         await prefs.setString(_tokenKey, user.token!);
       }
     } catch (error) {
-       // print('❌ Error saving user data: $error');
+      // Silently fail
+    }
+  }
+
+  // Save refresh token
+  Future<void> _saveRefreshToken(String token) async {
+    try {
+      await AppStorage.prefs.setString(_refreshTokenKey, token);
+    } catch (error) {
+      // Silently fail
     }
   }
 
   // Save authentication state
-  Future<void> _saveAuthState(bool isAuthenticated) async {
+  void _saveAuthState(bool isAuthenticated) {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool(_isAuthenticatedKey, isAuthenticated);
+      AppStorage.prefs.setBool('is_authenticated', isAuthenticated);
     } catch (error) {
-       // print('❌ Error saving auth state: $error');
+      // Silently fail
     }
   }
 
-  // Get stored user data
-  Future<UserModel?> getStoredUser() async {
+  // Get stored user data (synchronous)
+  UserModel? getStoredUserSync() {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final isAuthenticated = prefs.getBool(_isAuthenticatedKey) ?? false;
+      final prefs = AppStorage.prefs;
+      final isAuthenticated = prefs.getBool('is_authenticated') ?? false;
       
       if (!isAuthenticated) {
         return null;
@@ -107,31 +163,48 @@ class GoogleSignInService {
         token: userData['token'],
       );
     } catch (error) {
-       // print('❌ Error getting stored user: $error');
       return null;
     }
   }
 
-  // Check if user is authenticated
-  Future<bool> isAuthenticated() async {
+  // Legacy async method for compatibility
+  Future<UserModel?> getStoredUser() async {
+    return getStoredUserSync();
+  }
+
+  // Check if user is authenticated (synchronous)
+  bool isAuthenticatedSync() {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      return prefs.getBool(_isAuthenticatedKey) ?? false;
+      return AppStorage.prefs.getBool('is_authenticated') ?? false;
     } catch (error) {
-       // print('❌ Error checking auth status: $error');
       return false;
     }
   }
 
-  // Get stored token
-  Future<String?> getStoredToken() async {
+  Future<bool> isAuthenticated() async {
+    return isAuthenticatedSync();
+  }
+
+  // Get stored access token (synchronous)
+  String? getStoredTokenSync() {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      return prefs.getString(_tokenKey);
+      return AppStorage.prefs.getString(_tokenKey);
     } catch (error) {
-       // print('❌ Error getting stored token: $error');
       return null;
     }
+  }
+  
+  // Get stored refresh token (synchronous)
+  String? getStoredRefreshTokenSync() {
+    try {
+      return AppStorage.prefs.getString(_refreshTokenKey);
+    } catch (error) {
+      return null;
+    }
+  }
+
+  Future<String?> getStoredToken() async {
+    return getStoredTokenSync();
   }
 
   // Sign out
@@ -139,48 +212,36 @@ class GoogleSignInService {
     try {
       await _googleSignIn.signOut();
       
-      // Clear local storage
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = AppStorage.prefs;
       await prefs.remove(_userDataKey);
       await prefs.remove(_tokenKey);
-      await prefs.setBool(_isAuthenticatedKey, false);
-      
-       // print('✅ Google Sign-Out Success');
+      await prefs.remove(_refreshTokenKey);
+      await prefs.setBool('is_authenticated', false);
     } catch (error) {
-       // print('❌ Google Sign-Out Error: $error');
+      // Silently fail
     }
   }
 
-  // Check if already signed in (from Google)
+  // Check if current user exists (auto-login check)
   Future<UserModel?> getCurrentUser() async {
     try {
-      // First check local storage
-      final storedUser = await getStoredUser();
+      // 1. Check local storage first
+      final storedUser = getStoredUserSync();
       if (storedUser != null) {
         return storedUser;
       }
+      return null;
 
-      // Then try silent sign-in with Google
-      final GoogleSignInAccount? account = await _googleSignIn.signInSilently();
-      if (account == null) return null;
-
-      final GoogleSignInAuthentication auth = await account.authentication;
-      
-      final user = UserModel(
-        id: account.id,
-        name: account.displayName ?? '',
-        email: account.email,
-        photoUrl: account.photoUrl,
-        token: auth.idToken,
-      );
-
-      // Store for next time
-      await _saveUserData(user);
-      await _saveAuthState(true);
-
-      return user;
+      // Note: We REMOVED silent Google sign-in here because if we depend on backend JWT,
+      // we can't just silently sign in with Google and get a valid JWT without calling backend again.
+      // If we need to refresh the token, we should do it via refresh token endpoint logic 
+      // which creates a new Access Token. 
+      // For now, if local storage is empty, we consider user logged out.
+      // If we wanted to persistent login across installs (silent sign in), we'd need to:
+      // 1. Silent Google Sign In
+      // 2. Call backend again to get new JWTs
+      // BUT, usually persisted JWTs (Access/Refresh) are enough.
     } catch (error) {
-       // print('❌ Get Current User Error: $error');
       return null;
     }
   }

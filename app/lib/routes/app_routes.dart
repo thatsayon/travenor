@@ -5,6 +5,9 @@ import '../screens/splash/splash_page.dart';
 import '../screens/onboarding/pages/onboarding_page.dart';
 import '../screens/auth/sign_in_page.dart';
 import '../screens/auth/sign_up_page.dart';
+import '../screens/auth/forgot_password_page.dart';
+import '../screens/auth/otp_verification_page.dart';
+import '../screens/auth/reset_password_page.dart';
 import '../screens/main_navigation.dart';
 
 class AppRoutes {
@@ -12,6 +15,9 @@ class AppRoutes {
   static const String login = '/login';
   static const String signIn = '/sign-in';
   static const String signUp = '/sign-up';
+  static const String forgotPassword = '/forgot-password';
+  static const String otpVerification = '/otp-verification';
+  static const String resetPassword = '/reset-password';
   static const String home = '/home';
   static const String onboarding = '/onboarding';
 
@@ -34,6 +40,32 @@ class AppRoutes {
         return MaterialPageRoute(
           settings: settings,
           builder: (_) => const SignUpPage(),
+        );
+
+      case forgotPassword:
+        return MaterialPageRoute(
+          settings: settings,
+          builder: (_) => const ForgotPasswordPage(),
+        );
+
+      case otpVerification:
+        final args = settings.arguments as Map<String, dynamic>?;
+        return MaterialPageRoute(
+          settings: settings,
+          builder: (_) => OtpVerificationPage(
+            email: args?['email'] ?? '',
+            isPasswordReset: args?['isPasswordReset'] ?? false,
+          ),
+        );
+
+      case resetPassword:
+        final args = settings.arguments as Map<String, dynamic>?;
+        return MaterialPageRoute(
+          settings: settings,
+          builder: (_) => ResetPasswordPage(
+            email: args?['email'] ?? '',
+            otp: args?['otp'] ?? '',
+          ),
         );
 
       case onboarding:
