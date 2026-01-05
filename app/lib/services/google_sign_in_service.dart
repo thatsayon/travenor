@@ -17,7 +17,7 @@ class GoogleSignInService {
   final Dio _dio = Dio();
 
   // Production URL
-  static const String _backendUrl = 'https://travenor.projectyard.top/auth/google/';
+  static const String _backendUrl = 'https://travenor-v1.thatsayon.com/auth/google/';
 
   /// Sign in with Google and exchange ID token with backend
   /// Returns GoogleSignInResult containing user and tokens, or null if cancelled
