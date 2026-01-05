@@ -12,6 +12,7 @@ from .views import (
     ResendRegistrationOTPView,
     ResendForgetPasswordOTPView,
     GoogleLoginAPIView,
+    RefreshAccessTokenView,
 )
 
 urlpatterns = [
@@ -26,4 +27,5 @@ urlpatterns = [
     path('resend-registration-otp/', ResendRegistrationOTPView.as_view(), name='resend-registration-otp'),
     path('resend-forget-password-otp/', ResendForgetPasswordOTPView.as_view(), name='resend-forget-password-otp'),
     path('google/', GoogleLoginAPIView.as_view(), name='google-login'),
+    path('token/refresh/', RefreshAccessTokenView.as_view(), name='refresh-access-token'),
 ]

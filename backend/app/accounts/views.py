@@ -518,3 +518,30 @@ class GoogleLoginAPIView(APIView):
             },
             status=status.HTTP_200_OK
         )
+
+
+
+class RefreshAccessTokenView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        refresh_token = request.data.get("refresh")
+
+        if not refresh_token:
+            return Response(
+                {"detail": "Refresh token is required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            refresh = RefreshToken(refresh_token)
+
+            return Response(
+                {
+                    "access": str(refresh.access_token),
+                },
+                status=status.HTTP_200_OK,
+            )
+
+        except TokenError as e:
+            raise InvalidToken(e.args[0])
