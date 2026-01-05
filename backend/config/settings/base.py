@@ -24,19 +24,36 @@ ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=[])
 GOOGLE_CLIENT_ID = env("GOOGLE_CLIENT_ID")
 GOOGLE_ANDROID_CLIENT_ID = env("GOOGLE_ANDROID_CLIENT_ID")
 
-# cors settings
+CORS_ALLOWED_ORIGINS = [
+    "https://travenor-v1.thatsayon.com",
+    "http://localhost:3000",
+    "https://stingray-intimate-sincerely.ngrok-free.app",
+    "https://7m0vb4fq-3000.inc1.devtunnels.ms",
+    "https://psrwv4awgq.loclx.io",
+    "https://ballmastery.com",
+    "http://72.60.165.202:3000",
+]
+
+CORS_ALLOW_METHODS = [
+    "GET",
+    "POST",
+    "PUT",
+    "DELETE",
+    "PATCH",
+    "OPTIONS",
+]
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://travenor-v1.thatsayon.com",
+    "http://72.60.165.202:3000",
+    "http://localhost:3000",
+    "https://stingray-intimate-sincerely.ngrok-free.app",
+    "https://7m0vb4fq-3000.inc1.devtunnels.ms",
+    "https://psrwv4awgq.loclx.io",
+    "https://ballmastery.com",
+]
+
 CORS_ALLOW_CREDENTIALS = True
-
-CORS_ALLOWED_ORIGINS = env.list(
-    "CORS_ALLOWED_ORIGINS",
-    default=[]
-)
-
-# csrf settgings
-CSRF_TRUSTED_ORIGINS = env.list(
-    "CSRF_TRUSTED_ORIGINS",
-    default=[]
-) + ["https://travenor-v1.thatsayon.com"]
 
 
 # Application definition

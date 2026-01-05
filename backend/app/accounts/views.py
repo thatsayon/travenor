@@ -6,8 +6,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from django.db import transaction
 from django.utils.timezone import now
 from django.contrib.auth import authenticate, get_user_model
-from django.views.decorators.csrf import csrf_exempt
-from django.utils.decorators import method_decorator
+
 
 from app.common.enums import AuthProviderChoices
 from app.accounts.services.google import verify_google_token
