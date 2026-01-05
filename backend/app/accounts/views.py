@@ -7,7 +7,8 @@ from django.db import transaction
 from django.utils.timezone import now
 from django.contrib.auth import authenticate, get_user_model
 
-
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
 from app.common.enums import AuthProviderChoices
 from app.accounts.services.google import verify_google_token
 from app.accounts.utils import generate_otp, create_otp_token, decode_otp_token
@@ -24,6 +25,8 @@ from .tokens import get_tokens_for_user
 User = get_user_model()
 
 
+
+@method_decorator(csrf_exempt, name='dispatch')
 class RegisterView(generics.CreateAPIView):
     permission_classes = [permissions.AllowAny]
     serializer_class = RegisterSerializer
@@ -86,6 +89,8 @@ class RegisterView(generics.CreateAPIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
+
+@method_decorator(csrf_exempt, name='dispatch')
 class LoginView(APIView):
     permission_classes = [permissions.AllowAny]
 
@@ -132,6 +137,8 @@ class LoginView(APIView):
         )
 
 
+
+@method_decorator(csrf_exempt, name='dispatch')
 class LogoutView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
@@ -142,6 +149,8 @@ class LogoutView(APIView):
         )
 
 
+
+@method_decorator(csrf_exempt, name='dispatch')
 class VerifyTokenView(APIView):
     permission_classes = [permissions.AllowAny]
 
@@ -165,6 +174,8 @@ class VerifyTokenView(APIView):
         )
 
 
+
+@method_decorator(csrf_exempt, name='dispatch')
 class VerifyOTPView(APIView):
     permission_classes = [permissions.AllowAny]
 
@@ -218,6 +229,8 @@ class VerifyOTPView(APIView):
         )
 
 
+
+@method_decorator(csrf_exempt, name='dispatch')
 class ForgetPasswordView(APIView):
     permission_classes = [permissions.AllowAny]
 
@@ -267,6 +280,8 @@ class ForgetPasswordView(APIView):
         )
 
 
+
+@method_decorator(csrf_exempt, name='dispatch')
 class ForgetPasswordOTPVerifyView(APIView):
     permission_classes = [permissions.AllowAny]
 
@@ -320,6 +335,8 @@ class ForgetPasswordOTPVerifyView(APIView):
         )
 
 
+
+@method_decorator(csrf_exempt, name='dispatch')
 class ForgotPasswordSetView(APIView):
     permission_classes = [permissions.AllowAny]
 
@@ -358,6 +375,8 @@ class ForgotPasswordSetView(APIView):
         )
 
 
+
+@method_decorator(csrf_exempt, name='dispatch')
 class ResendRegistrationOTPView(APIView):
     permission_classes = [permissions.AllowAny]
 
@@ -402,6 +421,8 @@ class ResendRegistrationOTPView(APIView):
         )
 
 
+
+@method_decorator(csrf_exempt, name='dispatch')
 class ResendForgetPasswordOTPView(APIView):
     permission_classes = [permissions.AllowAny]
 
@@ -440,6 +461,8 @@ class ResendForgetPasswordOTPView(APIView):
         )
 
 
+
+@method_decorator(csrf_exempt, name='dispatch')
 class GoogleLoginAPIView(APIView):
     permission_classes = [permissions.AllowAny]
 
