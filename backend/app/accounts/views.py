@@ -6,7 +6,6 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from django.db import transaction
 from django.utils.timezone import now
 from django.contrib.auth import authenticate, get_user_model
-from django.shortcuts import get_object_or_404
 
 from app.common.enums import AuthProviderChoices
 from app.accounts.services.google import verify_google_token
@@ -30,7 +29,22 @@ class RegisterView(generics.CreateAPIView):
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+        
+        if not serializer.is_valid():
+            # Return first error message in standard format
+            errors = serializer.errors
+            first_error = None
+            for field, messages in errors.items():
+                if messages:
+                    if field == 'non_field_errors':
+                        first_error = messages[0] if isinstance(messages, list) else str(messages)
+                    else:
+                        first_error = messages[0] if isinstance(messages, list) else str(messages)
+                    break
+            return Response(
+                {"error": first_error or "Invalid data."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
         try:
             with transaction.atomic():
@@ -67,10 +81,7 @@ class RegisterView(generics.CreateAPIView):
 
         except Exception as e:
             return Response(
-                {
-                    "success": False,
-                    "message": f"Registration failed: {str(e)}"
-                },
+                {"error": f"Registration failed: {str(e)}"},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
@@ -81,8 +92,14 @@ class LoginView(APIView):
     def post(self, request):
         serializer = LoginSerializer(data=request.data)
         if not serializer.is_valid():
+            errors = serializer.errors
+            first_error = None
+            for field, messages in errors.items():
+                if messages:
+                    first_error = messages[0] if isinstance(messages, list) else str(messages)
+                    break
             return Response(
-                {"success": False, "error": serializer.errors},
+                {"error": first_error or "Invalid data."},
                 status=status.HTTP_400_BAD_REQUEST
             )
         
@@ -93,13 +110,13 @@ class LoginView(APIView):
 
         if not user:
             return Response(
-                {"success": False, "error": "Invalid email or password."},
+                {"error": "Invalid email or password."},
                 status=status.HTTP_401_UNAUTHORIZED
             )
 
         if not user.is_active:
             return Response(
-                {"success": False, "error": "Account is not active. Please verify your email."},
+                {"error": "Account is not active. Please verify your email."},
                 status=status.HTTP_403_FORBIDDEN
             )
 
@@ -132,14 +149,14 @@ class VerifyTokenView(APIView):
         otp_token = request.data.get("verificationToken")
         if not otp_token:
             return Response(
-                {"success": False, "error": "No token found."},
+                {"error": "No token found."},
                 status=status.HTTP_400_BAD_REQUEST
             )
         
         decoded = decode_otp_token(otp_token)
         if not decoded:
             return Response(
-                {"success": False, "error": "Invalid or expired token."},
+                {"error": "Invalid or expired token."},
                 status=status.HTTP_400_BAD_REQUEST
             )
         return Response(
@@ -157,14 +174,14 @@ class VerifyOTPView(APIView):
 
         if not otp_token or not otp:
             return Response(
-                {"success": False, "error": "OTP and verification token are required."},
+                {"error": "OTP and verification token are required."},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
         decoded = decode_otp_token(otp_token)
         if not decoded:
             return Response(
-                {"success": False, "error": "Invalid or expired token."},
+                {"error": "Invalid or expired token."},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
@@ -173,14 +190,14 @@ class VerifyOTPView(APIView):
             user = User._default_manager.get(id=user_id)
         except User.DoesNotExist:
             return Response(
-                {"success": False, "error": "User not found."},
+                {"error": "User not found."},
                 status=status.HTTP_404_NOT_FOUND
             )
 
         otp_instance = user.otps.filter(otp=otp).first()
         if not otp_instance or not otp_instance.is_valid():
             return Response(
-                {"success": False, "error": "Invalid or expired OTP."},
+                {"error": "Invalid or expired OTP."},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
@@ -208,11 +225,17 @@ class ForgetPasswordView(APIView):
         email = request.data.get("email")
         if not email:
             return Response(
-                {"success": False, "error": "Email is required."},
+                {"error": "Email is required."},
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        user = get_object_or_404(User, email=email)
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            return Response(
+                {"error": "No account found with this email."},
+                status=status.HTTP_404_NOT_FOUND
+            )
 
         otp = generate_otp()
 
@@ -253,24 +276,30 @@ class ForgetPasswordOTPVerifyView(APIView):
         
         if not otp or not reset_token:
             return Response(
-                {"success": False, "error": "OTP and reset token are required."},
+                {"error": "OTP and reset token are required."},
                 status=status.HTTP_400_BAD_REQUEST
             )
         
         decoded = decode_otp_token(reset_token)
         if not decoded:
             return Response(
-                {"success": False, "error": "Invalid or expired reset token."},
+                {"error": "Invalid or expired reset token."},
                 status=status.HTTP_400_BAD_REQUEST
             )
         
         user_id = decoded.get("user_id")
-        user = get_object_or_404(User, id=user_id)
+        try:
+            user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return Response(
+                {"error": "User not found."},
+                status=status.HTTP_404_NOT_FOUND
+            )
 
         otp_instance = user.otps.filter(otp=otp).first()
         if not otp_instance or not otp_instance.is_valid():
             return Response(
-                {"success": False, "error": "Invalid or expired OTP."},
+                {"error": "Invalid or expired OTP."},
                 status=status.HTTP_400_BAD_REQUEST
             )
         
@@ -300,14 +329,14 @@ class ForgotPasswordSetView(APIView):
         
         if not new_password or not verified_token:
             return Response(
-                {"success": False, "error": "New password and verified token are required."},
+                {"error": "New password and verified token are required."},
                 status=status.HTTP_400_BAD_REQUEST
             )
         
         decoded = decode_otp_token(verified_token)
         if not decoded or not decoded.get("verified"):
             return Response(
-                {"success": False, "error": "Invalid or expired verified token."},
+                {"error": "Invalid or expired verified token."},
                 status=status.HTTP_400_BAD_REQUEST
             )
         
@@ -316,7 +345,7 @@ class ForgotPasswordSetView(APIView):
             user = User.objects.get(id=user_id)
         except User.DoesNotExist:
             return Response(
-                {"success": False, "error": "User not found."},
+                {"error": "User not found."},
                 status=status.HTTP_404_NOT_FOUND
             )
         
@@ -336,23 +365,29 @@ class ResendRegistrationOTPView(APIView):
         verification_token = request.data.get("verificationToken")
         if not verification_token:
             return Response(
-                {"success": False, "error": "No verification token found."},
+                {"error": "No verification token found."},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
         decoded = decode_otp_token(verification_token)
         if not decoded:
             return Response(
-                {"success": False, "error": "Invalid or expired token."},
+                {"error": "Invalid or expired token."},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
         user_id = decoded.get("user_id")
-        user = get_object_or_404(User, id=user_id)
+        try:
+            user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return Response(
+                {"error": "User not found."},
+                status=status.HTTP_404_NOT_FOUND
+            )
 
         if user.is_active:
             return Response(
-                {"success": False, "message": "User already verified."},
+                {"error": "User already verified."},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
@@ -374,19 +409,25 @@ class ResendForgetPasswordOTPView(APIView):
         reset_token = request.data.get("passResetToken")
         if not reset_token:
             return Response(
-                {"success": False, "error": "No reset token found."},
+                {"error": "No reset token found."},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
         decoded = decode_otp_token(reset_token)
         if not decoded:
             return Response(
-                {"success": False, "error": "Invalid or expired reset token."},
+                {"error": "Invalid or expired reset token."},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
         user_id = decoded.get("user_id")
-        user = get_object_or_404(User, id=user_id)
+        try:
+            user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return Response(
+                {"error": "User not found."},
+                status=status.HTTP_404_NOT_FOUND
+            )
 
         otp = generate_otp()
         OTP.objects.create(user=user, otp=otp, created_at=now())
@@ -404,13 +445,26 @@ class GoogleLoginAPIView(APIView):
 
     def post(self, request):
         serializer = GoogleAuthSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+        if not serializer.is_valid():
+            errors = serializer.errors
+            first_error = None
+            for field, messages in errors.items():
+                if messages:
+                    first_error = messages[0] if isinstance(messages, list) else str(messages)
+                    break
+            return Response(
+                {"error": first_error or "Invalid data."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
         token = serializer.validated_data["token"]
         data = verify_google_token(token)
 
         if not data:
-            raise AuthenticationFailed("Invalid Google token")
+            return Response(
+                {"error": "Invalid Google token."},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
 
         user, created = User.objects.get_or_create(
             email=data["email"],
@@ -433,4 +487,11 @@ class GoogleLoginAPIView(APIView):
 
         tokens = get_tokens_for_user(user)
 
-        return Response(tokens, status=status.HTTP_200_OK)
+        return Response(
+            {
+                "success": True,
+                "access": tokens["access"],
+                "refresh": tokens["refresh"],
+            },
+            status=status.HTTP_200_OK
+        )
