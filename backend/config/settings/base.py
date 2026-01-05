@@ -36,7 +36,7 @@ CORS_ALLOWED_ORIGINS = env.list(
 CSRF_TRUSTED_ORIGINS = env.list(
     "CSRF_TRUSTED_ORIGINS",
     default=[]
-)
+) + ["https://travenor-v1.thatsayon.com"]
 
 
 # Application definition
