@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'dio_client.dart';
+import '../models/token_pair.dart';
 
 /// Response model for register API
 class RegisterResponse {
@@ -354,5 +355,39 @@ class AuthService {
         error: e.message,
       );
     }
+  }
+
+  /// Refresh access token using refresh token
+  Future<TokenPair?> refreshAccessToken(String refreshToken) async {
+    try {
+      final response = await _dioClient.dio.post(
+        '/auth/token/refresh/',
+        data: {
+          'refresh': refreshToken,
+        },
+      );
+      
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = response.data;
+        final String? accessToken = data['access'];
+        final String? newRefreshToken = data['refresh'];
+        
+        if (accessToken != null) {
+          return TokenPair(
+            accessToken: accessToken,
+            refreshToken: newRefreshToken ?? refreshToken, // Use new if provided, else keep old
+          );
+        }
+      }
+      return null;
+    } on DioException catch (e) {
+      print('❌ Token refresh failed: ${e.message}');
+      return null;
+    }
+  }
+
+  /// Sign out (placeholder - can be extended)
+  Future<void> signOut() async {
+    // Clear any server-side sessions if needed
   }
 }

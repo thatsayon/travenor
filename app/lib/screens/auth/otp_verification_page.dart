@@ -53,7 +53,8 @@ class _OtpVerificationPageState extends ConsumerState<OtpVerificationPage> {
       setState(() {
         if (_resendTimer > 0) {
           _resendTimer--;
-        } else {
+        }
+        if (_resendTimer == 0) {
           _canResend = true;
         }
       });
@@ -227,7 +228,7 @@ class _OtpVerificationPageState extends ConsumerState<OtpVerificationPage> {
                 ),
               ),
 
-              const SizedBox(height: 48),
+              const SizedBox(height: 32),
 
               // Error message
               if (_errorMessage != null)
@@ -254,23 +255,28 @@ class _OtpVerificationPageState extends ConsumerState<OtpVerificationPage> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: List.generate(6, (index) {
                   return SizedBox(
-                    width: 50,
-                    height: 60,
+                    width: 45, // Slightly reduced width to fit comfortably
+                    height: 56,
                     child: TextField(
                       controller: _controllers[index],
                       focusNode: _focusNodes[index],
                       textAlign: TextAlign.center,
-                      keyboardType: TextInputType.number,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: false, signed: false),
                       maxLength: 1,
                       style: const TextStyle(
-                        fontSize: 24,
+                        fontSize: 22, // Size adjusted
                         fontWeight: FontWeight.w700,
                         color: Color(0xFF1A1A1A),
+                        height: 1.0, 
                       ),
+                      // Disable autocorrect and suggestions for strict OTP input
+                      autocorrect: false,
+                      enableSuggestions: false,
                       decoration: InputDecoration(
                         counterText: '',
                         filled: true,
                         fillColor: const Color(0xFFF8FAFC),
+                        contentPadding: const EdgeInsets.symmetric(vertical: 12),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide(color: Colors.grey[300]!),
@@ -300,7 +306,7 @@ class _OtpVerificationPageState extends ConsumerState<OtpVerificationPage> {
                 }),
               ),
 
-              const SizedBox(height: 40),
+              const SizedBox(height: 24),
 
               // Verify button
               SizedBox(
@@ -336,36 +342,38 @@ class _OtpVerificationPageState extends ConsumerState<OtpVerificationPage> {
                 ),
               ),
 
-              const SizedBox(height: 32),
+              const SizedBox(height: 16),
 
               // Resend code
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    "Didn't receive the code? ",
-                    style: TextStyle(
-                      color: Colors.grey[600],
-                      fontSize: 15,
-                    ),
-                  ),
-                  TextButton(
-                    onPressed: _canResend ? _resendCode : null,
-                    style: TextButton.styleFrom(
-                      padding: EdgeInsets.zero,
-                      minimumSize: const Size(0, 0),
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    ),
-                    child: Text(
-                      _canResend ? 'Resend' : 'Resend in ${_resendTimer}s',
+              Center(
+                child: Column(
+                  children: [
+                    Text(
+                      "Didn't receive the code?",
                       style: TextStyle(
-                        color: _canResend ? const Color(0xFF0D6EFD) : Colors.grey[400],
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
+                        color: Colors.grey[600],
+                        fontSize: 14,
                       ),
                     ),
-                  ),
-                ],
+                    TextButton(
+                      onPressed: _canResend ? _resendCode : null,
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                        minimumSize: const Size(0, 0),
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      child: Text(
+                        _canResend ? 'RESEND CODE' : 'Resend in ${_resendTimer}s',
+                        style: TextStyle(
+                          color: _canResend ? const Color(0xFF0D6EFD) : Colors.grey[400],
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),

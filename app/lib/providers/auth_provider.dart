@@ -28,17 +28,42 @@ class AuthNotifier extends StateNotifier<AuthState> {
     _checkStoredAuth();
   }
 
+  // Check for stored authentication (refresh token)
   Future<void> _checkStoredAuth() async {
     try {
-      final hasToken = await SecureStorageService.hasRefreshToken();
-      if (hasToken) {
-        print('✅ Refresh token found in secure storage');
-        state = state.copyWith(status: AuthStatus.unauthenticated);
+      // Check if refresh token exists in secure storage
+      final refreshToken = await SecureStorageService.getRefreshToken();
+      
+      if (refreshToken != null && refreshToken.isNotEmpty) {
+        print('✅ Refresh token found - attempting to refresh access token');
+        state = state.copyWith(status: AuthStatus.loading);
+        
+        // Attempt to refresh the access token
+        final tokens = await _authService.refreshAccessToken(refreshToken);
+        
+        if (tokens != null) {
+          // Successfully refreshed - update tokens
+          await SecureStorageService.saveRefreshToken(tokens.refreshToken);
+          
+          state = state.copyWith(
+            status: AuthStatus.authenticated,
+            accessToken: tokens.accessToken,
+          );
+          
+          print('✅ Access token refreshed successfully - user auto-logged in');
+        } else {
+          // Refresh failed - token expired or invalid
+          print('❌ Token refresh failed - clearing refresh token');
+          await SecureStorageService.deleteRefreshToken();
+          state = state.copyWith(status: AuthStatus.unauthenticated);
+        }
       } else {
         print('ℹ️ No refresh token found - user needs to sign in');
+        state = state.copyWith(status: AuthStatus.unauthenticated);
       }
     } catch (e) {
       print('❌ Error checking stored auth: $e');
+      state = state.copyWith(status: AuthStatus.unauthenticated);
     }
   }
 
@@ -362,6 +387,12 @@ class AuthNotifier extends StateNotifier<AuthState> {
         errorMessage: e.toString(),
       );
     }
+  }
+
+  /// Update access token (used by AuthInterceptor after automatic refresh)
+  void updateAccessToken(String accessToken) {
+    state = state.copyWith(accessToken: accessToken);
+    print('🔄 Access token updated in state');
   }
 
   /// Clear Error

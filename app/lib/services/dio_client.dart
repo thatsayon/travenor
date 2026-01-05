@@ -31,4 +31,13 @@ class DioClient {
       ),
     );
   }
+
+  /// Add auth interceptor after Riverpod providers are available
+  void addAuthInterceptor(Interceptor interceptor) {
+    // Remove existing auth interceptor if any
+    dio.interceptors.removeWhere((i) => i.runtimeType.toString() == 'AuthInterceptor');
+    // Add new auth interceptor at the beginning (before LogInterceptor)
+    dio.interceptors.insert(0, interceptor);
+    print('✅ AuthInterceptor added to Dio client');
+  }
 }

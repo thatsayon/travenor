@@ -5,6 +5,10 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'routes/app_routes.dart';
 import 'utils/app_storage.dart';
+import 'providers/auth_provider.dart';
+import 'services/auth_interceptor.dart';
+import 'services/dio_client.dart';
+import 'services/auth_service.dart';
 
 void main() async {
   // Preserve native splash until we manually remove it
@@ -25,8 +29,34 @@ void main() async {
   runApp(const ProviderScope(child: MyApp()));
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends ConsumerStatefulWidget {
   const MyApp({super.key});
+
+  @override
+  ConsumerState<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends ConsumerState<MyApp> {
+  @override
+  void initState() {
+    super.initState();
+    // Initialize auth interceptor after first frame
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _initializeAuthInterceptor();
+    });
+  }
+
+  void _initializeAuthInterceptor() {
+    final dioClient = ref.read(dioClientProvider);
+    final authService = ref.read(authServiceProvider);
+    
+    final authInterceptor = AuthInterceptor(
+      ref: ref,
+      authService: authService,
+    );
+    
+    dioClient.addAuthInterceptor(authInterceptor);
+  }
 
   @override
   Widget build(BuildContext context) {
