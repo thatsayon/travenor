@@ -72,6 +72,7 @@ INSTALLED_APPS += [
     'app.accounts',
     'app.tours',
     'app.guides',
+    'app.notification',
 ]
 
 # Third-party

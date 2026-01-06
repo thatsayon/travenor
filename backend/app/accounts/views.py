@@ -26,7 +26,6 @@ User = get_user_model()
 
 
 
-@method_decorator(csrf_exempt, name='dispatch')
 class RegisterView(generics.CreateAPIView):
     permission_classes = [permissions.AllowAny]
     serializer_class = RegisterSerializer
@@ -90,7 +89,6 @@ class RegisterView(generics.CreateAPIView):
             )
 
 
-@method_decorator(csrf_exempt, name='dispatch')
 class LoginView(APIView):
     permission_classes = [permissions.AllowAny]
 
@@ -138,7 +136,6 @@ class LoginView(APIView):
 
 
 
-@method_decorator(csrf_exempt, name='dispatch')
 class LogoutView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
@@ -150,7 +147,6 @@ class LogoutView(APIView):
 
 
 
-@method_decorator(csrf_exempt, name='dispatch')
 class VerifyTokenView(APIView):
     permission_classes = [permissions.AllowAny]
 
@@ -175,7 +171,6 @@ class VerifyTokenView(APIView):
 
 
 
-@method_decorator(csrf_exempt, name='dispatch')
 class VerifyOTPView(APIView):
     permission_classes = [permissions.AllowAny]
 
@@ -230,7 +225,6 @@ class VerifyOTPView(APIView):
 
 
 
-@method_decorator(csrf_exempt, name='dispatch')
 class ForgetPasswordView(APIView):
     permission_classes = [permissions.AllowAny]
 
@@ -281,7 +275,6 @@ class ForgetPasswordView(APIView):
 
 
 
-@method_decorator(csrf_exempt, name='dispatch')
 class ForgetPasswordOTPVerifyView(APIView):
     permission_classes = [permissions.AllowAny]
 
@@ -336,7 +329,6 @@ class ForgetPasswordOTPVerifyView(APIView):
 
 
 
-@method_decorator(csrf_exempt, name='dispatch')
 class ForgotPasswordSetView(APIView):
     permission_classes = [permissions.AllowAny]
 
@@ -376,7 +368,6 @@ class ForgotPasswordSetView(APIView):
 
 
 
-@method_decorator(csrf_exempt, name='dispatch')
 class ResendRegistrationOTPView(APIView):
     permission_classes = [permissions.AllowAny]
 
@@ -422,7 +413,6 @@ class ResendRegistrationOTPView(APIView):
 
 
 
-@method_decorator(csrf_exempt, name='dispatch')
 class ResendForgetPasswordOTPView(APIView):
     permission_classes = [permissions.AllowAny]
 
@@ -462,7 +452,6 @@ class ResendForgetPasswordOTPView(APIView):
 
 
 
-@method_decorator(csrf_exempt, name='dispatch')
 class GoogleLoginAPIView(APIView):
     permission_classes = [permissions.AllowAny]
 
