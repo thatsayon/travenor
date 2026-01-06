@@ -1,5 +1,9 @@
 from django.urls import path
 
+from app.accounts.profile.views import (
+    ProfileView,
+)
+
 from .views import (
     RegisterView,
     LoginView,
@@ -28,4 +32,7 @@ urlpatterns = [
     path('resend-forget-password-otp/', ResendForgetPasswordOTPView.as_view(), name='resend-forget-password-otp'),
     path('google/', GoogleLoginAPIView.as_view(), name='google-login'),
     path('token/refresh/', RefreshAccessTokenView.as_view(), name='refresh-access-token'),
+
+    # profile update
+    path('profile/', ProfileView.as_view(), name='Edit Profile'),
 ]

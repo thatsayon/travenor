@@ -64,6 +64,22 @@ class UserAccount(BaseModel, AbstractBaseUser, PermissionsMixin):
         null=True,
     )
 
+    present_address = models.TextField(blank=True, null=True)
+
+    emergency_contact_number = models.CharField(
+        max_length=20,
+        blank=True,
+        null=True
+    )
+
+    emergency_contact_relationship = models.CharField(
+        max_length=50,
+        blank=True,
+        null=True
+    )
+
+    profile_updated_at = models.DateTimeField(blank=True, null=True)
+
     auth_provider = models.CharField(
         max_length=20,
         choices=AuthProviderChoices.choices,
