@@ -2,7 +2,7 @@ from rest_framework import serializers
 
 from django.utils.timezone import now
 
-from .models import Tour
+from .models import Tour, TourDayActivity, TourDay, TourInclusion, TourBooking
 
 
 class TourListSerializer(serializers.ModelSerializer):
@@ -96,6 +96,36 @@ class TourListSerializer(serializers.ModelSerializer):
         return int((joined / obj.max_capacity) * 100)
 
 
+class TourDayActivitySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TourDayActivity
+        fields = (
+            "title",
+            "is_included",
+        )
+
+
+class TourDaySerializer(serializers.ModelSerializer):
+    activities = TourDayActivitySerializer(many=True, read_only=True)
+
+    class Meta:
+        model = TourDay
+        fields = (
+            "day_number",
+            "title",
+            "subtitle",
+            "activities",
+        )
+
+
+class TourInclusionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TourInclusion
+        fields = (
+            "title",
+            "is_included",
+        )
+
 
 class TourDetailSerializer(serializers.ModelSerializer):
     duration_text = serializers.ReadOnlyField()
@@ -117,6 +147,19 @@ class TourDetailSerializer(serializers.ModelSerializer):
 
     tour_lead = serializers.StringRelatedField()
 
+    tour_plan = TourDaySerializer(
+        source="days",
+        many=True,
+        read_only=True
+    )
+
+    included = serializers.SerializerMethodField()
+    not_included = serializers.SerializerMethodField()
+
+    transport = serializers.SerializerMethodField()
+    stay = serializers.SerializerMethodField()
+
+
     class Meta:
         model = Tour
         fields = [
@@ -130,6 +173,10 @@ class TourDetailSerializer(serializers.ModelSerializer):
             "start_datetime",
             "booking_deadline",
             "time_left",
+
+            #logistics
+            "transport",
+            "stay",
 
             # duration
             "duration_days",
@@ -156,6 +203,10 @@ class TourDetailSerializer(serializers.ModelSerializer):
             "meeting_time",
             "tour_lead",
 
+            "tour_plan",
+            "included",
+            "not_included",
+
             # meta
             "is_active",
             "created_at",
@@ -168,7 +219,7 @@ class TourDetailSerializer(serializers.ModelSerializer):
     def get_location_text(self, obj):
         parts = [obj.division.name]
         if obj.district:
-            parts.append(obj.district.name)
+            parts.append(obj.district.name) 
         if obj.upazila:
             parts.append(obj.upazila.name)
         return ", ".join(parts)
@@ -195,3 +246,72 @@ class TourDetailSerializer(serializers.ModelSerializer):
             "days": delta.days,
             "hours": delta.seconds // 3600,
         }
+
+    def get_included(self, obj):
+        qs = obj.inclusions.filter(is_included=True)
+        return TourInclusionSerializer(qs, many=True).data
+
+    def get_not_included(self, obj):
+        qs = obj.inclusions.filter(is_included=False)
+        return TourInclusionSerializer(qs, many=True).data
+
+    def get_transport(self, obj):
+        return {
+            "name": obj.transport.name,
+            "rating": obj.transport_rating,
+        }
+
+    def get_stay(self, obj):
+        return {
+            "name": obj.stay.name,
+            "rating": obj.stay_rating,
+        }
+
+
+class JoinTourSerializer(serializers.Serializer):
+    full_name = serializers.CharField(required=False)
+    mobile_number = serializers.CharField(required=False)
+    emergency_contact_number = serializers.CharField(required=False)
+    emergency_contact_relationship = serializers.CharField(required=False)
+
+
+
+class MyTourSerializer(serializers.ModelSerializer):
+    tour_title = serializers.CharField(source="tour.title")
+    tour_image = serializers.SerializerMethodField()
+    start_date = serializers.DateTimeField(source="tour.start_datetime")
+    location = serializers.SerializerMethodField()
+    price = serializers.DecimalField(
+        source="tour.upfront_payment",
+        max_digits=10,
+        decimal_places=2
+    )
+
+    class Meta:
+        model = TourBooking
+        fields = (
+            "id",
+            "tour_title",
+            "tour_image",
+            "start_date",
+            "location",
+            "status",
+            "price",
+            "booking_reference",
+        )
+
+    def get_tour_image(self, obj):
+        if obj.tour.featured_image:
+            return obj.tour.featured_image.url
+        return None
+
+    def get_location(self, obj):
+        tour = obj.tour
+        parts = [tour.division.name]
+
+        if tour.district:
+            parts.append(tour.district.name)
+        if tour.upazila:
+            parts.append(tour.upazila.name)
+
+        return ", ".join(parts)

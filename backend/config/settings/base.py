@@ -82,6 +82,7 @@ INSTALLED_APPS += [
     'cloudinary',
     'cloudinary_storage',
     'corsheaders',
+    'nested_admin',
 ]
 
 MIDDLEWARE = [

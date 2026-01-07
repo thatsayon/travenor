@@ -107,6 +107,23 @@ class UserAccount(BaseModel, AbstractBaseUser, PermissionsMixin):
     def __str__(self):
         return self.email
 
+    def missing_booking_fields(self):
+        missing = []
+
+        if not self.full_name:
+            missing.append("full_name")
+
+        if not self.mobile_number:
+            missing.append("mobile_number")
+
+        if not self.emergency_contact_number:
+            missing.append("emergency_contact_number")
+
+        if not self.emergency_contact_relationship:
+            missing.append("emergency_contact_relationship")
+
+        return missing
+
 
 class OTP(BaseModel):
     user = models.ForeignKey(UserAccount, on_delete=models.CASCADE, related_name="otps")
