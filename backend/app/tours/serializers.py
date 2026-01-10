@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
 from django.utils.timezone import now
+from django.utils import timezone
 from django.db.models import Count
 
 from app.guides.models import TourGuide
@@ -78,19 +79,34 @@ class TourListSerializer(serializers.ModelSerializer):
 
         return ", ".join(parts)
     
+
     def get_time_left(self, obj):
         if not obj.booking_deadline:
             return None
 
-        delta = obj.booking_deadline - now()
+        now_time = timezone.now()
+
+        deadline = obj.booking_deadline
+        if timezone.is_naive(deadline):
+            deadline = timezone.make_aware(deadline)
+
+        delta = deadline - now_time
 
         if delta.total_seconds() <= 0:
             return None
 
+        total_seconds = int(delta.total_seconds())
+
+        days = total_seconds // 86400
+        hours = (total_seconds % 86400) // 3600
+        minutes = (total_seconds % 3600) // 60
+
         return {
-            "days": delta.days,
-            "hours": delta.seconds // 3600,
+            "days": days,
+            "hours": hours,
+            "minutes": minutes,
         }
+        
 
     def get_progress_percent(self, obj):
         joined = obj.joined_count or 0
@@ -254,18 +270,34 @@ class TourDetailSerializer(serializers.ModelSerializer):
             return 0
         return int((joined / obj.max_capacity) * 100)
 
+    
     def get_time_left(self, obj):
         if not obj.booking_deadline:
             return None
 
-        delta = obj.booking_deadline - now()
+        now_time = timezone.now()
+
+        deadline = obj.booking_deadline
+        if timezone.is_naive(deadline):
+            deadline = timezone.make_aware(deadline)
+
+        delta = deadline - now_time
+
         if delta.total_seconds() <= 0:
             return None
 
+        total_seconds = int(delta.total_seconds())
+
+        days = total_seconds // 86400
+        hours = (total_seconds % 86400) // 3600
+        minutes = (total_seconds % 3600) // 60
+
         return {
-            "days": delta.days,
-            "hours": delta.seconds // 3600,
+            "days": days,
+            "hours": hours,
+            "minutes": minutes,
         }
+
 
     def get_included(self, obj):
         qs = obj.inclusions.filter(is_included=True)
