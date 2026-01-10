@@ -48,7 +48,7 @@ class TourDetailView(generics.RetrieveAPIView):
             Tour.objects
             .filter(is_active=True)
             .select_related(
-                "tour_lead",
+                "tour_lead__user",
                 "division",
                 "district",
                 "upazila",
@@ -56,7 +56,7 @@ class TourDetailView(generics.RetrieveAPIView):
             .annotate(
                 joined_count=Sum("bookings__seats"),
                 rating_avg=Avg("reviews__rating"),
-                rating_count=Count("reviews"),
+                rating_count=Count("reviews", distinct=True),
                 transport_rating=Avg("transport__reviews__rating"),
                 stay_rating=Avg("stay__reviews__rating"),
             )

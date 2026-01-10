@@ -1,6 +1,9 @@
 from rest_framework import serializers
 
 from django.utils.timezone import now
+from django.db.models import Count
+
+from app.guides.models import TourGuide
 
 from .models import Tour, TourDayActivity, TourDay, TourInclusion, TourBooking
 
@@ -126,6 +129,23 @@ class TourInclusionSerializer(serializers.ModelSerializer):
             "is_included",
         )
 
+class TourGuideSerializer(serializers.ModelSerializer):
+    full_name = serializers.CharField(source="user.full_name", read_only=True)
+    profile_pic = serializers.SerializerMethodField()
+    tours_completed = serializers.IntegerField(read_only=True)
+
+    class Meta:
+        model = TourGuide
+        fields = (
+            "id",
+            "full_name",
+            "profile_pic",
+            "rating",
+            "tours_completed",
+        )
+
+    def get_profile_pic(self, obj):
+        return obj.user.profile_pic.url if obj.user.profile_pic else None
 
 class TourDetailSerializer(serializers.ModelSerializer):
     duration_text = serializers.ReadOnlyField()
@@ -145,7 +165,7 @@ class TourDetailSerializer(serializers.ModelSerializer):
     )
     rating_count = serializers.IntegerField(read_only=True)
 
-    tour_lead = serializers.StringRelatedField()
+    tour_lead = serializers.SerializerMethodField()
 
     tour_plan = TourDaySerializer(
         source="days",
@@ -266,6 +286,23 @@ class TourDetailSerializer(serializers.ModelSerializer):
             "name": obj.stay.name,
             "rating": obj.stay_rating,
         }
+
+    def get_tour_lead(self, obj):
+        if not obj.tour_lead:
+            return None
+
+        guide = (
+            obj.tour_lead.__class__.objects
+            .filter(pk=obj.tour_lead.pk)
+            .annotate(
+                tours_completed=Count("tours", distinct=True)
+            )
+            .select_related("user")
+            .first()
+        )
+
+        return TourGuideSerializer(guide).data
+
 
 
 class JoinTourSerializer(serializers.Serializer):
