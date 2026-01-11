@@ -568,7 +568,7 @@ class UpdatePasswordView(APIView):
 class DeleteAccountView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
-    def post(self, request):
+    def delete(self, request):
         user = request.user
 
         with transaction.atomic():
