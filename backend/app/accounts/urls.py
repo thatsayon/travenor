@@ -17,6 +17,8 @@ from .views import (
     ResendForgetPasswordOTPView,
     GoogleLoginAPIView,
     RefreshAccessTokenView,
+    UpdatePasswordView,
+    DeleteAccountView,
 )
 
 urlpatterns = [
@@ -35,4 +37,6 @@ urlpatterns = [
 
     # profile update
     path('profile/', ProfileView.as_view(), name='Edit Profile'),
+    path('update-password/', UpdatePasswordView.as_view(), name='Update Password'),
+    path('delete-account/', DeleteAccountView.as_view(), name='Delete Account'),
 ]

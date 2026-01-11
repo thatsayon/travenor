@@ -19,6 +19,8 @@ from .serializers import (
     GoogleAuthSerializer,
     RegisterSerializer,
     LoginSerializer,
+    UpdatePasswordSerializer,
+    DeleteAccountSerializer,
 ) 
 from .tokens import get_tokens_for_user
 
@@ -534,3 +536,61 @@ class RefreshAccessTokenView(APIView):
 
         except TokenError as e:
             raise InvalidToken(e.args[0])
+
+
+
+class UpdatePasswordView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        serializer = UpdatePasswordSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        user = request.user
+        current_password = serializer.validated_data["current_password"]
+        new_password = serializer.validated_data["new_password"]
+
+        if not user.check_password(current_password):
+            return Response(
+                {"error": "Current password is incorrect."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        user.set_password(new_password)
+        user.save(update_fields=["password"])
+
+        return Response(
+            {"success": True, "message": "Password updated successfully."},
+            status=status.HTTP_200_OK
+        )
+
+
+
+class DeleteAccountView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        serializer = DeleteAccountSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        user = request.user
+        password = serializer.validated_data["password"]
+
+        if not user.check_password(password):
+            return Response(
+                {"error": "Password is incorrect."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        with transaction.atomic():
+            # Delete related OTPs explicitly (clarity > magic)
+            user.otps.all().delete()
+            user.delete()
+
+        return Response(
+            {
+                "success": True,
+                "message": "Account deleted permanently."
+            },
+            status=status.HTTP_200_OK
+        )
