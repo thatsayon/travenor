@@ -565,25 +565,14 @@ class UpdatePasswordView(APIView):
         )
 
 
-
 class DeleteAccountView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
-        serializer = DeleteAccountSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
         user = request.user
-        password = serializer.validated_data["password"]
-
-        if not user.check_password(password):
-            return Response(
-                {"error": "Password is incorrect."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
 
         with transaction.atomic():
-            # Delete related OTPs explicitly (clarity > magic)
+            # Explicit cleanup for clarity
             user.otps.all().delete()
             user.delete()
 
