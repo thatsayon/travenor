@@ -35,6 +35,16 @@ class AppStorage {
     return isFirstLaunchSync();
   }
 
+  /// Set authentication status (synchronous after init)
+  void setAuthenticatedSync(bool value) {
+    prefs.setBool(_isAuthenticatedKey, value);
+  }
+
+  /// Set first launch status (synchronous after init)
+  void setFirstLaunchSync(bool value) {
+    prefs.setBool(_firstLaunchKey, value);
+  }
+
   Future<void> setFirstLaunchFalse() async {
     await init();
     await prefs.setBool(_firstLaunchKey, false);

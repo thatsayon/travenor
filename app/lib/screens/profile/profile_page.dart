@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../main.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/profile_data_provider.dart';
+import '../../providers/notification_preferences_provider.dart';
 import '../../routes/app_routes.dart';
 import 'account_settings_page.dart';
 import 'edit_profile_page.dart';
@@ -10,11 +12,27 @@ import 'faq_page.dart';
 import 'about_page.dart';
 import 'notification_preferences_page.dart';
 
-class ProfilePage extends ConsumerWidget {
+class ProfilePage extends ConsumerStatefulWidget {
   const ProfilePage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ProfilePage> createState() => _ProfilePageState();
+}
+
+class _ProfilePageState extends ConsumerState<ProfilePage> {
+  @override
+  void initState() {
+    super.initState();
+    // Prefetch profile and notification preferences data
+    // This will populate the cache so pages load instantly
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(profileDataProvider.notifier).revalidate();
+      ref.read(notificationPreferencesProvider.notifier).revalidate();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
     final user = authState.user;
     
@@ -34,20 +52,44 @@ class ProfilePage extends ConsumerWidget {
                 ),
                 child: Column(
                   children: [
-                    // Avatar
+                    // Avatar with cached image
                     CircleAvatar(
                       radius: 50,
-                      backgroundColor: const Color(0xFFFFD6E0), // Pink background
-                      backgroundImage: user?.photoUrl != null 
-                          ? NetworkImage(user!.photoUrl!)
-                          : null,
-                      child: user?.photoUrl == null
-                          ? Icon(
+                      backgroundColor: AppTheme.primaryBlue.withValues(alpha: 0.1),
+                      child: user?.photoUrl != null && user!.photoUrl!.isNotEmpty
+                          ? ClipOval(
+                              child: Image.network(
+                                user.photoUrl!,
+                                width: 100,
+                                height: 100,
+                                fit: BoxFit.cover,
+                                loadingBuilder: (context, child, loadingProgress) {
+                                  if (loadingProgress == null) return child;
+                                  return Center(
+                                    child: CircularProgressIndicator(
+                                      value: loadingProgress.expectedTotalBytes != null
+                                          ? loadingProgress.cumulativeBytesLoaded /
+                                              loadingProgress.expectedTotalBytes!
+                                          : null,
+                                      color: AppTheme.primaryBlue,
+                                      strokeWidth: 2,
+                                    ),
+                                  );
+                                },
+                                errorBuilder: (context, error, stackTrace) {
+                                  return Icon(
+                                    Icons.person,
+                                    size: 50,
+                                    color: AppTheme.primaryBlue,
+                                  );
+                                },
+                              ),
+                            )
+                          : Icon(
                               Icons.person,
                               size: 50,
                               color: AppTheme.primaryBlue,
-                            )
-                          : null,
+                            ),
                     ),
                     
                     const SizedBox(height: 16),
@@ -269,7 +311,7 @@ class ProfilePage extends ConsumerWidget {
               width: 44,
               height: 44,
               decoration: BoxDecoration(
-                color: AppTheme.backgroundGray,
+                color: AppTheme.primaryBlue.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(

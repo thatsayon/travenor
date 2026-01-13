@@ -1,0 +1,662 @@
+{
+	"info": {
+		"_postman_id": "3a2e7257-8b0a-4065-9c72-3ccedfb40780",
+		"name": "Travenor",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "24845302",
+		"_collection_link": "https://nexduo.postman.co/workspace/NexDuo-Workspace~98ce2d64-6565-47eb-8967-be17439cafaa/collection/24845302-3a2e7257-8b0a-4065-9c72-3ccedfb40780?action=share&source=collection_link&creator=24845302"
+	},
+	"item": [
+		{
+			"name": "Auth",
+			"item": [
+				{
+					"name": "Register",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"abc@gmail.com\",\n    \"full_name\": \"Ashiqul Islam Ayon\",\n    \"password\": \"1fjw0676\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/auth/register/",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"auth",
+								"register",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Login",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"ab@gmail.com\",\n    \"password\": \"hijamil\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/auth/login/",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"auth",
+								"login",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Google",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"token\": \"\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/auth/google/",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"auth",
+								"google",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Verify Token",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"verificationToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiZjViM2QzNWQtZWNhNC00OTlmLThjZjItYzE3MTM3YmNlYTJmIiwiZXhwIjoxNzY3NTY5MzM1LCJpYXQiOjE3Njc1Njg3MzUsIm5iZiI6MTc2NzU2ODczNX0.W5dj3u-GmuEGdph19l8yQcPCM3JuJOOEGN9Ekvpv5Cs\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/auth/verify-token/",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"auth",
+								"verify-token",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Verifiy OTP",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"otp\": \"358870\",\n    \"verificationToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiYjk3YzBhZmQtM2E0Mi00ZDM1LThkMzktZGFiNGZlNWEwNzBkIiwiZXhwIjoxNzY3NTY5NTczLCJpYXQiOjE3Njc1Njg5NzMsIm5iZiI6MTc2NzU2ODk3M30.VcdYAq6G0E1xCX3_LretcZntmgplkWu6kTKlykrByTk\"    \n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/auth/verify-otp/",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"auth",
+								"verify-otp",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Forgot Password",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"ab@gmail.com\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/auth/forget-password/",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"auth",
+								"forget-password",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Forgot Password  OTP Verify",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"passResetToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiYjk3YzBhZmQtM2E0Mi00ZDM1LThkMzktZGFiNGZlNWEwNzBkIiwiZXhwIjoxNzY3NTY5NjI5LCJpYXQiOjE3Njc1NjkwMjksIm5iZiI6MTc2NzU2OTAyOX0.aNtdCUZHipOpxLQiyBbP3aUEymF5fUhyKBToMk7b2Z4\",\n    \"otp\": \"582135\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/auth/forget-password-otp-verify/",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"auth",
+								"forget-password-otp-verify",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Forgot Password Set",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"passwordResetVerified\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiYjk3YzBhZmQtM2E0Mi00ZDM1LThkMzktZGFiNGZlNWEwNzBkIiwidmVyaWZpZWQiOnRydWUsImV4cCI6MTc2NzU2OTcxMywiaWF0IjoxNzY3NTY5MTEzLCJuYmYiOjE3Njc1NjkxMTN9.DzTmEWEM1xrxUUiAmrkx-L8k-QifAQoXaylMHbPM83o\",\n    \"new_password\": \"hijamil\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/auth/forgot-password-set/",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"auth",
+								"forgot-password-set",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Resend Registration OTP",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"verificationToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiYjk3YzBhZmQtM2E0Mi00ZDM1LThkMzktZGFiNGZlNWEwNzBkIiwiZXhwIjoxNzY3NTY5NTczLCJpYXQiOjE3Njc1Njg5NzMsIm5iZiI6MTc2NzU2ODk3M30.VcdYAq6G0E1xCX3_LretcZntmgplkWu6kTKlykrByTk\"\n}\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/auth/resend-registration-otp/",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"auth",
+								"resend-registration-otp",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Resend Forgot Password OTP",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"passResetToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiYjk3YzBhZmQtM2E0Mi00ZDM1LThkMzktZGFiNGZlNWEwNzBkIiwiZXhwIjoxNzY3NTY5NjI5LCJpYXQiOjE3Njc1NjkwMjksIm5iZiI6MTc2NzU2OTAyOX0.aNtdCUZHipOpxLQiyBbP3aUEymF5fUhyKBToMk7b2Z4\"\n}\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/auth/resend-forget-password-otp/",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"auth",
+								"resend-forget-password-otp",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Generate Access Token",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"refresh\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc2ODE3OTAyNiwiaWF0IjoxNzY3NTc0MjI2LCJqdGkiOiIxZGFjNDVjNmZjMjI0MTJjYjg3NGMwMjI1ZTlhOTJlMSIsInVzZXJfaWQiOiJiOTdjMGFmZC0zYTQyLTRkMzUtOGQzOS1kYWI0ZmU1YTA3MGQiLCJlbWFpbCI6ImFiQGdtYWlsLmNvbSIsImZ1bGxfbmFtZSI6IkFzaGlxdWwgSXNsYW0gQXlvbiIsInVzZXJuYW1lIjoiYXNoaXF1bDZlYzdmODg4IiwicHJvZmlsZV9waWMiOm51bGwsImF1dGhfcHJvdmlkZXIiOiJlbWFpbCJ9.1JUynAhjScQ5J-wWDMKjI_YzeRHzTY1Dhc_gTB4vxGI\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/auth/token/refresh/",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"auth",
+								"token",
+								"refresh",
+								""
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Edit Profile",
+			"item": [
+				{
+					"name": "Edit Profile",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "full_name",
+									"value": "Ayon",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseURL}}/auth/edit-profile/",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"auth",
+								"edit-profile",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Profile",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/auth/profile/",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"auth",
+								"profile",
+								""
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "User",
+			"item": [
+				{
+					"name": "Tour",
+					"item": [
+						{
+							"name": "Tour List",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "GET",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"token\": \"eyJhbGciOiJSUzI1NiIsImtpZCI6IjQ5NmQwMDhlOGM3YmUxY2FlNDIwOWUwZDVjMjFiMDUwYTYxZTk2MGYiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL2FjY291bnRzLmdvb2dsZS5jb20iLCJhenAiOiI1NTczOTM0NzgwODItZmhmdjJjYnU3ZTQ5N2FrNjkyYWJiNWR1bXBjbzFhbHQuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJhdWQiOiI1NTczOTM0NzgwODItZmhmdjJjYnU3ZTQ5N2FrNjkyYWJiNWR1bXBjbzFhbHQuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJzdWIiOiIxMTAxMDg2MTY0MTc5Mjg4NjE4NzQiLCJlbWFpbCI6ImFzaGlxdWxpc2xhbWF5b24yOEBnbWFpbC5jb20iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwiYXRfaGFzaCI6IjZXV1d6WXlsanA3cUU0TU9uVWVWRUEiLCJpYXQiOjE3NjcxMjczNzksImV4cCI6MTc2NzEzMDk3OX0.Fcvaxfs-wZxgG37wIw6lxhoGd8Y6N0FCf7QOeL4I5etHsk01Rfu5gqNvvSxDqOrd7BvDJF4kGPlbbR4S-PtmLAmJ7-RODgpzoj4ryIcHoAwDQ-fsmYv-a9N183rz0vd-vU9jfjLWRbk7d8SGSgt2Ti2G0XAllvuJQ3QSeJ5NT-MSM9wGhVx-x2Nh2gPSf7qmAeq_ClG4xWPduK653DQK33rjcXXZT-5QsxdP_BqGoO0hFu-Qee9fpDV9pMwIRw5B0gEL1Pj672EZt4PMCXQkNYF5aXTv60ENmIXxWEnOZBSSRSr2HHwa8A2u9Seq75m7Sa2WGqO5nCakuI3I_Nq75w\"\n}"
+								},
+								"url": {
+									"raw": "{{baseURL}}/tour/list/",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"tour",
+										"list",
+										""
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Tour Detail",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseURL}}/tour/detail/dhaka-tour/",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"tour",
+										"detail",
+										"dhaka-tour",
+										""
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Join Tour",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseURL}}/tour/join/dhaka-tour/",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"tour",
+										"join",
+										"dhaka-tour",
+										""
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Join Tour",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "{{baseURL}}/tour/join/dhaka-tour/",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"tour",
+										"join",
+										"dhaka-tour",
+										""
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Confirm Booking",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseURL}}/tour/confirm/2d658b4e-cdc5-4acf-905d-14079e0ff640/",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"tour",
+										"confirm",
+										"2d658b4e-cdc5-4acf-905d-14079e0ff640",
+										""
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Confirm Booking",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"accepted_terms\": true\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseURL}}/tour/confirm/8affba0d-34e6-4a03-803c-e73a282b9468/",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"tour",
+										"confirm",
+										"8affba0d-34e6-4a03-803c-e73a282b9468",
+										""
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Upcoming Tours",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseURL}}/tour/upcoming/",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"tour",
+										"upcoming",
+										""
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Past Tours",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseURL}}/tour/past/",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"tour",
+										"past",
+										""
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Notification",
+			"item": [
+				{
+					"name": "Notification Preference",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"marketing_emails\": true\n}\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/notification/preference/",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"notification",
+								"preference",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Notification Preference",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"marketing_emails\": true\n}\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/notification/preference/",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"notification",
+								"preference",
+								""
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{access_token}}",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	]
+}

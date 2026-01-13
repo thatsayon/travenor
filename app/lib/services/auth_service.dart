@@ -386,6 +386,23 @@ class AuthService {
     }
   }
 
+  /// Delete account
+  Future<SimpleResponse> deleteAccount() async {
+    try {
+      final response = await _dioClient.dio.delete('/auth/delete-account/');
+      return SimpleResponse.fromJson(response.data);
+    } on DioException catch (e) {
+      if (e.response?.data != null) {
+        return SimpleResponse.fromJson(e.response!.data);
+      }
+      return SimpleResponse(
+        success: false,
+        message: 'Failed to delete account',
+        error: e.message,
+      );
+    }
+  }
+
   /// Sign out (placeholder - can be extended)
   Future<void> signOut() async {
     // Clear any server-side sessions if needed

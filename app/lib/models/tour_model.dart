@@ -1,8 +1,27 @@
+// Helper functions to safely parse string numbers from API
+double _parseDouble(dynamic value, {double defaultValue = 0.0}) {
+  if (value == null) return defaultValue;
+  if (value is double) return value;
+  if (value is int) return value.toDouble();
+  if (value is String) return double.tryParse(value) ?? defaultValue;
+  return defaultValue;
+}
+
+int _parseInt(dynamic value, {int defaultValue = 0}) {
+  if (value == null) return defaultValue;
+  if (value is int) return value;
+  if (value is double) return value.toInt();
+  if (value is String) return int.tryParse(value) ?? defaultValue;
+  return defaultValue;
+}
+
 class TourModel {
   final String id;
+  final String slug; // URL-friendly identifier for API calls
   final String title;
   final String location;
   final String division;
+  final String locationText; // Full location text from API (e.g., "Khulna, Khulna, Satkhira")
   final int durationDays;
   final int durationNights;
   final int price; // Upfront payment
@@ -28,9 +47,11 @@ class TourModel {
 
   TourModel({
     required this.id,
+    required this.slug,
     required this.title,
     required this.location,
     required this.division,
+    required this.locationText,
     required this.durationDays,
     required this.durationNights,
     required this.price,
@@ -64,9 +85,11 @@ class TourModel {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
+      'slug': slug,
       'title': title,
       'location': location,
       'division': division,
+      'locationText': locationText,
       'durationDays': durationDays,
       'durationNights': durationNights,
       'price': price,
@@ -93,33 +116,71 @@ class TourModel {
   }
 
   factory TourModel.fromJson(Map<String, dynamic> json) {
+    // Extract transport and stay info
+    final transport = json['transport'] as Map<String, dynamic>?;
+    final stay = json['stay'] as Map<String, dynamic>?;
+    final tourLead = json['tour_lead']; // Can be Map or String based on API
+    
+    // Parse location text to derive location and division
+    final locationVal = json['location_text'] ?? json['location'] ?? '';
+    String locationStr = '';
+    String divisionStr = '';
+    
+    if (locationVal.isNotEmpty) {
+      final parts = locationVal.toString().split(',').map((e) => e.trim()).toList();
+      locationStr = parts.isNotEmpty ? parts[0] : '';
+      divisionStr = parts.length > 1 ? parts[1] : locationStr;
+    }
+
+    // Parse numeric fields safely
+    final upcomingPayment = _parseInt(json['upfront_payment'] ?? json['price']);
+    final totalCost = _parseInt(json['total_cost'] ?? json['fullCost']);
+    
     return TourModel(
-      id: json['id'],
-      title: json['title'],
-      location: json['location'],
-      division: json['division'],
-      durationDays: json['durationDays'],
-      durationNights: json['durationNights'],
-      price: json['price'],
-      fullCost: json['fullCost'] ?? (json['price'] * 2), // Fallback if missing
-      rating: json['rating'],
-      reviewCount: json['reviewCount'],
-      imageUrl: json['imageUrl'],
-      isVerifiedLead: json['isVerifiedLead'],
-      hasRefundGuarantee: json['hasRefundGuarantee'],
-      transportType: json['transportType'],
-      transportRating: json['transportRating'],
-      stayType: json['stayType'],
-      stayRating: json['stayRating'],
-      totalSpots: json['totalSpots'],
-      spotsJoined: json['spotsJoined'],
-      joinDeadline: json['joinDeadline'],
-      tourLead: TourLeadModel.fromJson(json['tourLead']),
-      itinerary: (json['itinerary'] as List).map((e) => DayItinerary.fromJson(e)).toList(),
-      included: List<String>.from(json['included']),
-      notIncluded: List<String>.from(json['notIncluded']),
-      meetingPoint: MeetingPointModel.fromJson(json['meetingPoint']),
-      refundPolicy: RefundPolicyModel.fromJson(json['refundPolicy']),
+      id: json['id']?.toString() ?? '',
+      slug: json['slug'] ?? '',
+      title: json['title'] ?? '',
+      location: locationStr,
+      division: divisionStr,
+      locationText: locationVal.toString(),
+      durationDays: _parseInt(json['duration_days']),
+      durationNights: _parseInt(json['duration_nights']),
+      price: upcomingPayment,
+      fullCost: totalCost > 0 ? totalCost : (upcomingPayment * 2),
+      rating: _parseDouble(json['rating']),
+      reviewCount: _parseInt(json['rating_count']),
+      imageUrl: json['featured_image'] ?? json['imageUrl'] ?? '',
+      isVerifiedLead: json['is_verified_lead'] ?? false,
+      hasRefundGuarantee: json['has_refund_guarantee'] ?? (json['min_group_size'] != null),
+      transportType: transport?['name'] ?? json['transportType'] ?? 'Bus',
+      transportRating: _parseDouble(transport?['rating'] ?? json['transportRating']),
+      stayType: stay?['name'] ?? json['stayType'] ?? 'Hotel',
+      stayRating: _parseDouble(stay?['rating'] ?? json['stayRating']),
+      totalSpots: _parseInt(json['max_capacity']),
+      spotsJoined: _parseInt(json['joined_count'] ?? json['spotsJoined']),
+      joinDeadline: json['booking_deadline'] ?? json['start_datetime'] ?? DateTime.now().add(const Duration(days: 30)).toIso8601String(),
+      tourLead: tourLead != null 
+          ? (tourLead is Map<String, dynamic> ? TourLeadModel.fromJson(tourLead) : TourLeadModel.empty())
+          : TourLeadModel.empty(),
+      itinerary: (json['tour_plan'] as List?)?.map((e) => DayItinerary.fromJson(e as Map<String, dynamic>)).toList() ?? [],
+      included: (json['included'] as List?)?.map((e) {
+        if (e is String) return e;
+        if (e is Map) return e['title']?.toString() ?? '';
+        return e.toString();
+      }).toList() ?? [],
+      notIncluded: (json['not_included'] as List?)?.map((e) {
+        if (e is String) return e;
+        if (e is Map) return e['title']?.toString() ?? '';
+        return e.toString();
+      }).toList() ?? [],
+      meetingPoint: MeetingPointModel(
+        location: json['meeting_point'] ?? '',
+        time: json['meeting_time'] ?? '',
+      ),
+      refundPolicy: RefundPolicyModel(
+        description: json['refund_policy_description'] ?? 'Full refund if minimum group size not met',
+        minimumGroupSize: _parseInt(json['min_group_size'] ?? 10),
+      ),
     );
   }
 }
@@ -149,13 +210,23 @@ class TourLeadModel {
     };
   }
 
+  factory TourLeadModel.empty() {
+    return TourLeadModel(
+      id: '',
+      name: 'Unknown',
+      avatarUrl: '',
+      rating: 0.0,
+      toursLed: 0,
+    );
+  }
+
   factory TourLeadModel.fromJson(Map<String, dynamic> json) {
     return TourLeadModel(
-      id: json['id'],
-      name: json['name'],
-      avatarUrl: json['avatarUrl'],
-      rating: json['rating'],
-      toursLed: json['toursLed'],
+      id: json['id'] ?? '',
+      name: json['full_name'] ?? json['name'] ?? 'Unknown',
+      avatarUrl: json['profile_pic'] ?? json['avatarUrl'] ?? '',
+      rating: _parseDouble(json['rating']),
+      toursLed: _parseInt(json['tours_completed'] ?? json['toursLed']),
     );
   }
 }
@@ -183,11 +254,16 @@ class DayItinerary {
   }
 
   factory DayItinerary.fromJson(Map<String, dynamic> json) {
+    final activities = json['activities'] as List?;
     return DayItinerary(
-      day: json['day'],
-      title: json['title'],
-      description: json['description'],
-      activities: List<String>.from(json['activities']),
+      day: _parseInt(json['day_number'] ?? json['day']),
+      title: json['title'] ?? '',
+      description: json['subtitle'] ?? json['description'] ?? '',
+      activities: activities?.map((e) {
+        if (e is String) return e;
+        if (e is Map) return e['title']?.toString() ?? e.toString();
+        return e.toString();
+      }).toList() ?? [],
     );
   }
 }
@@ -232,10 +308,17 @@ class RefundPolicyModel {
     };
   }
 
+  factory RefundPolicyModel.empty() {
+    return RefundPolicyModel(
+      description: 'Standard refund policy applies',
+      minimumGroupSize: 10,
+    );
+  }
+
   factory RefundPolicyModel.fromJson(Map<String, dynamic> json) {
     return RefundPolicyModel(
-      description: json['description'],
-      minimumGroupSize: json['minimumGroupSize'],
+      description: json['description'] ?? '',
+      minimumGroupSize: _parseInt(json['minimumGroupSize'] ?? json['minimum_group_size']),
     );
   }
 }

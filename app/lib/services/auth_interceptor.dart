@@ -18,8 +18,14 @@ class AuthInterceptor extends Interceptor {
     final accessToken = authState.accessToken;
 
     if (accessToken != null && accessToken.isNotEmpty) {
-      // Add Bearer token to request headers
-      options.headers['Authorization'] = 'Bearer $accessToken';
+      // Don't add token for auth endpoints (login, register, refresh)
+      // This prevents sending expired tokens to the refresh endpoint which causes 401 loops
+      final path = options.path;
+      if (!path.contains('/auth/token/refresh/') && 
+          !path.contains('/auth/login/') && 
+          !path.contains('/auth/register/')) {
+        options.headers['Authorization'] = 'Bearer $accessToken';
+      }
     }
 
     handler.next(options);
@@ -29,6 +35,11 @@ class AuthInterceptor extends Interceptor {
   void onError(DioException err, ErrorInterceptorHandler handler) async {
     // Check if error is 401 Unauthorized
     if (err.response?.statusCode == 401) {
+      // Ignore 401s from the refresh endpoint to prevent infinite loops
+      if (err.requestOptions.path.contains('/auth/token/refresh/')) {
+        return handler.next(err);
+      }
+
       print('⚠️ 401 Unauthorized - attempting to refresh token');
 
       try {

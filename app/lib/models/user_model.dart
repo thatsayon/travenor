@@ -33,6 +33,22 @@ class UserModel {
     };
   }
 
+  UserModel copyWith({
+    String? id,
+    String? name,
+    String? email,
+    String? photoUrl,
+    String? token,
+  }) {
+    return UserModel(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      email: email ?? this.email,
+      photoUrl: photoUrl ?? this.photoUrl,
+      token: token ?? this.token,
+    );
+  }
+
   @override
   String toString() {
     return 'UserModel(id: $id, name: $name, email: $email, photoUrl: $photoUrl, token: $token)';

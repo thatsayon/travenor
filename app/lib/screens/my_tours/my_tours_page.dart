@@ -1,44 +1,61 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../main.dart';
-import '../../services/booking_service.dart';
-import '../../models/booking_request_model.dart';
 import '../../widgets/booking_card.dart';
+import '../../providers/auth_provider.dart';
+import '../../models/tour_model.dart';
 
-class MyToursPage extends StatefulWidget {
+class MyToursPage extends ConsumerStatefulWidget {
   const MyToursPage({super.key});
 
   @override
-  State<MyToursPage> createState() => _MyToursPageState();
+  ConsumerState<MyToursPage> createState() => _MyToursPageState();
 }
 
-class _MyToursPageState extends State<MyToursPage> with SingleTickerProviderStateMixin {
+class _MyToursPageState extends ConsumerState<MyToursPage> with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  final _bookingService = BookingService();
-  List<BookingRequestModel> _allBookings = [];
+  List<TourModel> _upcomingTours = [];
+  List<TourModel> _pastTours = [];
   bool _isLoading = true;
+  String? _error;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
-    _loadBookings();
+    _loadTours();
   }
 
-  Future<void> _loadBookings() async {
+  Future<void> _loadTours() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+
     try {
-      final bookings = await _bookingService.getAllBookings();
+      final tourService = ref.read(tourServiceProvider);
+      
+      // Load both upcoming and past tours in parallel
+      final results = await Future.wait([
+        tourService.getUpcomingTours(),
+        tourService.getPastTours(),
+      ]);
+
       if (mounted) {
         setState(() {
-          _allBookings = bookings;
+          _upcomingTours = results[0];
+          _pastTours = results[1];
           _isLoading = false;
         });
       }
     } catch (error) {
       if (mounted) {
         setState(() {
+          _error = 'Failed to load tours';
           _isLoading = false;
         });
       }
+      print('❌ Error loading tours: $error');
     }
   }
 
@@ -48,44 +65,14 @@ class _MyToursPageState extends State<MyToursPage> with SingleTickerProviderStat
     super.dispose();
   }
 
-  bool _isPast(BookingRequestModel booking) {
-    try {
-      // Use join deadline as a proxy for tour date
-      final tourDate = DateTime.parse(booking.tour.joinDeadline);
-      return tourDate.isBefore(DateTime.now());
-    } catch (e) {
-      return false;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) {
-      return const Scaffold(
-        backgroundColor: Colors.white,
-        body: Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
-    }
-
-    final upcomingBookings = _allBookings
-        .where((b) => b.status != 'cancelled' && !_isPast(b))
-        .map((b) => _bookingService.toBookingModel(b))
-        .toList();
-    
-    final pastBookings = _allBookings
-        .where((b) => b.status == 'cancelled' || _isPast(b))
-        .map((b) => _bookingService.toBookingModel(b))
-        .toList();
-    
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header with title
             // Header with title
             Container(
               width: double.infinity,
@@ -102,78 +89,114 @@ class _MyToursPageState extends State<MyToursPage> with SingleTickerProviderStat
               ),
             ),
             
-            // Tab bar container overlapping the header slightly or just below
             // Tab bar container
-            Transform.translate(
-              offset: const Offset(0, 0), // No overlap needed
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 16),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF5F5F5),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.grey.shade300),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
               child: Container(
-                margin: const EdgeInsets.symmetric(horizontal: 16),
+                height: 48,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF5F5F5), // Moved background color here
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.grey.shade300), // Reduced to grey 300 for subtler look
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.05),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: TabBar(
+                  controller: _tabController,
+                  indicatorSize: TabBarIndicatorSize.tab,
+                  padding: const EdgeInsets.all(4),
+                  indicatorPadding: EdgeInsets.zero,
+                  dividerColor: Colors.transparent,
+                  indicator: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(6),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.1),
+                        blurRadius: 2,
+                        offset: const Offset(0, 1),
+                      ),
+                    ],
+                  ),
+                  labelColor: AppTheme.primaryBlue,
+                  unselectedLabelColor: Colors.grey[600],
+                  labelStyle: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                  ),
+                  unselectedLabelStyle: const TextStyle(
+                    fontWeight: FontWeight.w500,
+                    fontSize: 14,
+                  ),
+                  tabs: const [
+                    Tab(text: 'Upcoming'),
+                    Tab(text: 'Past'),
                   ],
                 ),
-                child: Container(
-                  height: 48, // Slightly increased height for better touch targets
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: TabBar(
-                      controller: _tabController,
-                      indicatorSize: TabBarIndicatorSize.tab,
-                      padding: const EdgeInsets.all(4), // Padding around the entire tab bar content
-                      indicatorPadding: EdgeInsets.zero, // The indicator fills the "tab" space, which is already constrained by the padding above
-                      dividerColor: Colors.transparent, // Ensure no divider line
-                      indicator: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(6),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.1),
-                            blurRadius: 2,
-                            offset: const Offset(0, 1),
-                          ),
-                        ],
-                      ),
-                      labelColor: AppTheme.primaryBlue, // Selected text color
-                      unselectedLabelColor: Colors.grey[600],
-                      labelStyle: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
-                      ),
-                      unselectedLabelStyle: const TextStyle(
-                        fontWeight: FontWeight.w500,
-                        fontSize: 14,
-                      ),
-                      tabs: const [
-                        Tab(text: 'Upcoming'),
-                        Tab(text: 'Past'),
-                      ],
-                    ),
-                  ),
-                ),
               ),
-
+            ),
             
-            // Fix spacing for tab bar transform
-            // Adjusted spacing after tab bar
-            const SizedBox(height: 0),
+            const SizedBox(height: 16),
             
             // Content
             Expanded(
-              child: TabBarView(
-                controller: _tabController,
-                children: [
-                  _buildBookingList(upcomingBookings, isUpcoming: true),
-                  _buildBookingList(pastBookings, isUpcoming: false),
-                ],
+              child: _isLoading
+                  ? Center(
+                      child: CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryBlue),
+                      ),
+                    )
+                  : _error != null
+                      ? _buildErrorState()
+                      : TabBarView(
+                          controller: _tabController,
+                          children: [
+                            _buildTourList(_upcomingTours, isUpcoming: true),
+                            _buildTourList(_pastTours, isUpcoming: false),
+                          ],
+                        ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildErrorState() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.error_outline,
+              size: 48,
+              color: AppTheme.error,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              _error!,
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    color: AppTheme.textSecondary,
+                  ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton.icon(
+              onPressed: _loadTours,
+              icon: Icon(Icons.refresh),
+              label: Text('Retry'),
+              style: ElevatedButton.styleFrom(
+                minimumSize: Size(160, 48),
               ),
             ),
           ],
@@ -182,8 +205,8 @@ class _MyToursPageState extends State<MyToursPage> with SingleTickerProviderStat
     );
   }
 
-  Widget _buildBookingList(List<dynamic> bookings, {required bool isUpcoming}) {
-    if (bookings.isEmpty) {
+  Widget _buildTourList(List<TourModel> tours, {required bool isUpcoming}) {
+    if (tours.isEmpty) {
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(40),
@@ -219,13 +242,22 @@ class _MyToursPageState extends State<MyToursPage> with SingleTickerProviderStat
     }
     
     return RefreshIndicator(
-      onRefresh: _loadBookings,
+      onRefresh: _loadTours,
       color: AppTheme.primaryBlue,
       child: ListView.builder(
         padding: const EdgeInsets.all(16),
-        itemCount: bookings.length,
+        itemCount: tours.length,
         itemBuilder: (context, index) {
-          return BookingCard(booking: bookings[index]);
+          final tour = tours[index];
+          // Convert TourModel to BookingModel for display
+          final booking = BookingModel(
+            id: tour.id,
+            tour: tour,
+            bookingDate: DateTime.now().toIso8601String(),
+            status: isUpcoming ? 'confirmed' : 'completed',
+            pricePaid: tour.price,
+          );
+          return BookingCard(booking: booking);
         },
       ),
     );

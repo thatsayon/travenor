@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../../main.dart';
 import '../../providers/auth_provider.dart';
-import '../../services/profile_service.dart';
-import '../../services/booking_service.dart';
 import '../../routes/app_routes.dart';
 import 'privacy_policy_page.dart';
 import 'terms_of_service_page.dart';
@@ -13,66 +10,106 @@ class AccountSettingsPage extends ConsumerWidget {
   const AccountSettingsPage({super.key});
 
   Future<void> _showDeleteAccountDialog(BuildContext context, WidgetRef ref) async {
+    final TextEditingController confirmController = TextEditingController();
+    bool isDeleteEnabled = false;
+
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Account'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Are you absolutely sure you want to delete your account?',
-              style: TextStyle(fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'This will:',
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-            const SizedBox(height: 8),
-            _buildWarningItem(context, 'Permanently delete your profile'),
-            _buildWarningItem(context, 'Remove all your booking history'),
-            _buildWarningItem(context, 'Sign you out of the app'),
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: AppTheme.error.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) {
+          return AlertDialog(
+            title: const Text('Delete Account'),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(Icons.warning_amber, color: AppTheme.error, size: 20),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      'This action cannot be undone!',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: AppTheme.error,
-                            fontWeight: FontWeight.w600,
-                          ),
+                  const Text(
+                    'Are you absolutely sure you want to delete your account?',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'This will:',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                  const SizedBox(height: 8),
+                  _buildWarningItem(context, 'Permanently delete your profile'),
+                  _buildWarningItem(context, 'Remove all your booking history'),
+                  _buildWarningItem(context, 'Sign you out of the app'),
+                  const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppTheme.error.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
                     ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.warning_amber, color: AppTheme.error, size: 20),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'This action cannot be undone!',
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                  color: AppTheme.error,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Text(
+                    'Type DELETE to confirm:',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                  ),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: confirmController,
+                    decoration: InputDecoration(
+                      hintText: 'DELETE',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(
+                          color: isDeleteEnabled ? AppTheme.error : AppTheme.primaryBlue,
+                          width: 2,
+                        ),
+                      ),
+                    ),
+                    onChanged: (value) {
+                      setState(() {
+                        isDeleteEnabled = value == 'DELETE';
+                      });
+                    },
                   ),
                 ],
               ),
             ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.error,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Delete Account'),
-          ),
-        ],
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: isDeleteEnabled ? () => Navigator.pop(context, true) : null,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.error,
+                  foregroundColor: Colors.white,
+                  disabledBackgroundColor: AppTheme.borderGray,
+                  disabledForegroundColor: AppTheme.textLight,
+                ),
+                child: const Text('Delete Account'),
+              ),
+            ],
+          );
+        },
       ),
     );
 
@@ -92,19 +129,16 @@ class AccountSettingsPage extends ConsumerWidget {
         ),
       );
 
-      // Clear all user data
-      final profileService = ProfileService();
-      final bookingService = BookingService();
+      // Call delete account API
+      final authService = ref.read(authServiceProvider);
+      final response = await authService.deleteAccount();
       
-      await profileService.clearProfile();
-      await bookingService.clearAllBookings();
-      
-      // Clear shared preferences
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.clear();
+      if (!response.success) {
+        throw Exception(response.error ?? response.message);
+      }
 
-      // Sign out
-      ref.read(authProvider.notifier).signOut();
+      // Sign out locally
+      await ref.read(authProvider.notifier).signOut();
 
       if (!context.mounted) return;
 
@@ -119,9 +153,9 @@ class AccountSettingsPage extends ConsumerWidget {
 
       // Show success message
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Your account has been deleted'),
-          backgroundColor: Colors.green,
+        SnackBar(
+          content: Text(response.message),
+          backgroundColor: AppTheme.success,
         ),
       );
     } catch (error) {
@@ -133,7 +167,7 @@ class AccountSettingsPage extends ConsumerWidget {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error deleting account: $error'),
-          backgroundColor: Colors.red,
+          backgroundColor: AppTheme.error,
         ),
       );
     }

@@ -1,18 +1,19 @@
 import 'package:flutter/material.dart';
-
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'home/home_page.dart';
 import 'my_tours/my_tours_page.dart';
 import 'profile/profile_page.dart';
+import '../providers/auth_provider.dart';
 
-class MainNavigation extends StatefulWidget {
+class MainNavigation extends ConsumerStatefulWidget {
   const MainNavigation({super.key});
 
   @override
-  State<MainNavigation> createState() => _MainNavigationState();
+  ConsumerState<MainNavigation> createState() => _MainNavigationState();
 }
 
-class _MainNavigationState extends State<MainNavigation> {
+class _MainNavigationState extends ConsumerState<MainNavigation> {
   int _currentIndex = 0;
 
   @override
@@ -20,6 +21,26 @@ class _MainNavigationState extends State<MainNavigation> {
     super.initState();
     // Remove splash screen when app is ready
     FlutterNativeSplash.remove();
+    
+    // Precache profile image after the first frame
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _precacheProfileImage();
+    });
+  }
+
+  /// Precache the user's profile photo so it loads faster when they navigate to profile tab
+  void _precacheProfileImage() {
+    final authState = ref.read(authProvider);
+    final photoUrl = authState.user?.photoUrl;
+    
+    if (photoUrl != null && photoUrl.isNotEmpty && mounted) {
+      try {
+        precacheImage(NetworkImage(photoUrl), context);
+        print('🖼️ Precaching profile image: $photoUrl');
+      } catch (e) {
+        print('⚠️ Failed to precache image: $e');
+      }
+    }
   }
 
   final List<Widget> _pages = const [

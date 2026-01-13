@@ -5,6 +5,13 @@ import '../services/auth_service.dart';
 import '../services/dio_client.dart';
 import '../services/google_sign_in_service.dart';
 import '../services/secure_storage_service.dart';
+import '../services/tour_service.dart';
+import '../services/notification_service.dart';
+import '../services/profile_service.dart';
+import '../utils/jwt_decoder.dart';
+import 'profile_data_provider.dart';
+import 'notification_preferences_provider.dart';
+
 
 // Providers for services
 final dioClientProvider = Provider<DioClient>((ref) => DioClient());
@@ -18,12 +25,44 @@ final googleSignInServiceProvider = Provider<GoogleSignInService>(
   (ref) => GoogleSignInService(),
 );
 
+// Tour Service Provider
+final tourServiceProvider = Provider((ref) {
+  final dioClient = ref.watch(dioClientProvider);
+  return ref.read(tourServiceProviderImpl(dioClient));
+});
+
+final tourServiceProviderImpl = Provider.family((ref, DioClient dioClient) {
+  return TourService(dioClient);
+});
+
+// Notification Service Provider
+final notificationServiceProvider = Provider((ref) {
+  final dioClient = ref.watch(dioClientProvider);
+  return ref.read(notificationServiceProviderImpl(dioClient));
+});
+
+final notificationServiceProviderImpl = Provider.family((ref, DioClient dioClient) {
+  return NotificationService(dioClient);
+});
+
+// Profile Service Provider (with DioClient for API calls)
+final profileServiceProvider = Provider((ref) {
+  final dioClient = ref.watch(dioClientProvider);
+  return ref.read(profileServiceProviderImpl(dioClient));
+});
+
+final profileServiceProviderImpl = Provider.family((ref, DioClient dioClient) {
+  return ProfileService(dioClient);
+});
+
+
 // Auth State Notifier
 class AuthNotifier extends StateNotifier<AuthState> {
   final AuthService _authService;
   final GoogleSignInService _googleSignInService;
+  final Ref _ref;
 
-  AuthNotifier(this._authService, this._googleSignInService)
+  AuthNotifier(this._authService, this._googleSignInService, this._ref)
       : super(const AuthState()) {
     _checkStoredAuth();
   }
@@ -45,9 +84,28 @@ class AuthNotifier extends StateNotifier<AuthState> {
           // Successfully refreshed - update tokens
           await SecureStorageService.saveRefreshToken(tokens.refreshToken);
           
+          // Extract user data from access token JWT
+          final userInfo = JwtDecoder.extractUserInfo(tokens.accessToken);
+          UserModel? user;
+          if (userInfo != null) {
+            user = UserModel.fromJson(userInfo);
+            
+            // Restore profile photo from storage if available (for Google Sign-In users)
+            if (user.photoUrl == null || user.photoUrl!.isEmpty) {
+              final savedPhoto = await SecureStorageService.getProfilePhoto();
+              if (savedPhoto != null) {
+                user = user.copyWith(photoUrl: savedPhoto);
+                print('✅ Profile photo restored from storage');
+              }
+            }
+            
+            print('✅ User data extracted from token: ${user.name}');
+          }
+          
           state = state.copyWith(
             status: AuthStatus.authenticated,
             accessToken: tokens.accessToken,
+            user: user,
           );
           
           print('✅ Access token refreshed successfully - user auto-logged in');
@@ -55,6 +113,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
           // Refresh failed - token expired or invalid
           print('❌ Token refresh failed - clearing refresh token');
           await SecureStorageService.deleteRefreshToken();
+          await SecureStorageService.deleteProfilePhoto();
           state = state.copyWith(status: AuthStatus.unauthenticated);
         }
       } else {
@@ -90,14 +149,17 @@ class AuthNotifier extends StateNotifier<AuthState> {
           await SecureStorageService.saveRefreshToken(response.refreshToken!);
         }
 
+        // Extract user data from access token JWT
+        final userInfo = JwtDecoder.extractUserInfo(response.accessToken!);
+        final user = userInfo != null 
+            ? UserModel.fromJson(userInfo)
+            : UserModel(email: email, name: email.split('@')[0]);
+
         state = state.copyWith(
           status: AuthStatus.authenticated,
           accessToken: response.accessToken,
           refreshToken: response.refreshToken,
-          user: UserModel(
-            email: email,
-            name: email.split('@')[0],
-          ),
+          user: user,
           errorMessage: null,
         );
       } else {
@@ -173,15 +235,21 @@ class AuthNotifier extends StateNotifier<AuthState> {
           await SecureStorageService.saveRefreshToken(response.refreshToken!);
         }
 
+        // Extract user data from access token JWT
+        final userInfo = JwtDecoder.extractUserInfo(response.accessToken!);
+        final user = userInfo != null 
+            ? UserModel.fromJson(userInfo)
+            : UserModel(
+                email: state.pendingEmail ?? '',
+                name: state.pendingEmail?.split('@')[0] ?? '',
+              );
+
         state = state.copyWith(
           status: AuthStatus.authenticated,
           accessToken: response.accessToken,
           refreshToken: response.refreshToken,
           verificationToken: null,
-          user: UserModel(
-            email: state.pendingEmail ?? '',
-            name: state.pendingEmail?.split('@')[0] ?? '',
-          ),
+          user: user,
           errorMessage: null,
         );
         return true;
@@ -341,6 +409,11 @@ class AuthNotifier extends StateNotifier<AuthState> {
       if (result != null) {
         await SecureStorageService.saveRefreshToken(result.tokens.refreshToken);
         
+        // Save Google profile photo to secure storage (since backend doesn't store it)
+        if (result.user.photoUrl != null && result.user.photoUrl!.isNotEmpty) {
+          await SecureStorageService.saveProfilePhoto(result.user.photoUrl);
+        }
+        
         state = state.copyWith(
           status: AuthStatus.authenticated,
           user: result.user,
@@ -369,6 +442,11 @@ class AuthNotifier extends StateNotifier<AuthState> {
     try {
       await _googleSignInService.signOut();
       await SecureStorageService.deleteRefreshToken();
+      await SecureStorageService.deleteProfilePhoto();
+      
+      // Invalidate all cached data providers
+      _ref.invalidate(profileDataProvider);
+      _ref.invalidate(notificationPreferencesProvider);
       
       state = const AuthState(
         status: AuthStatus.unauthenticated,
@@ -380,7 +458,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
         passwordResetVerified: null,
       );
       
-      print('✅ User signed out - all tokens cleared');
+      print('✅ User signed out - all tokens and cached data cleared');
     } catch (e) {
       state = state.copyWith(
         status: AuthStatus.error,
@@ -408,5 +486,5 @@ class AuthNotifier extends StateNotifier<AuthState> {
 final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
   final authService = ref.watch(authServiceProvider);
   final googleSignInService = ref.watch(googleSignInServiceProvider);
-  return AuthNotifier(authService, googleSignInService);
+  return AuthNotifier(authService, googleSignInService, ref);
 });

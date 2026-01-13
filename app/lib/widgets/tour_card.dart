@@ -133,7 +133,7 @@ class TourCard extends StatelessWidget {
                       const SizedBox(width: 4),
                       Expanded(
                         child: Text(
-                          tour.location,
+                          tour.locationText.isNotEmpty ? tour.locationText : tour.location,
                           style: Theme.of(context).textTheme.bodyMedium,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,

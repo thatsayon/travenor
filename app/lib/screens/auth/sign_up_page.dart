@@ -5,6 +5,7 @@ import '../../providers/auth_provider.dart';
 import '../../routes/app_routes.dart';
 import '../../widgets/custom_text_field.dart';
 import '../../widgets/google_sign_in_button.dart';
+import '../common/webview_page.dart';
 
 class SignUpPage extends ConsumerStatefulWidget {
   const SignUpPage({super.key});
@@ -285,23 +286,37 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
                               ),
                               const SizedBox(width: 10),
                               Expanded(
-                                child: RichText(
-                                  text: TextSpan(
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      color: Colors.grey[600],
-                                      height: 1.4,
-                                    ),
-                                    children: const [
-                                      TextSpan(text: 'I agree to the '),
-                                      TextSpan(
-                                        text: 'Terms & Conditions',
-                                        style: TextStyle(
-                                          color: Color(0xFF0D6EFD),
-                                          fontWeight: FontWeight.w600,
+                                child: GestureDetector(
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => const WebViewPage(
+                                          url: 'https://travenor.thatsayon.com/terms-and-conditions',
+                                          title: 'Terms & Conditions',
                                         ),
                                       ),
-                                    ],
+                                    );
+                                  },
+                                  child: RichText(
+                                    text: TextSpan(
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        color: Colors.grey[600],
+                                        height: 1.4,
+                                      ),
+                                      children: const [
+                                        TextSpan(text: 'I agree to the '),
+                                        TextSpan(
+                                          text: 'Terms & Conditions',
+                                          style: TextStyle(
+                                            color: Color(0xFF0D6EFD),
+                                            fontWeight: FontWeight.w600,
+                                            decoration: TextDecoration.underline,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ),
                               ),

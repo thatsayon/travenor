@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../main.dart';
 import '../../models/tour_model.dart';
 import '../../services/profile_service.dart';
+import '../../providers/auth_provider.dart';
 import '../profile/complete_profile_page.dart';
 import '../booking/booking_confirmation_page.dart';
 
-class TourDetailsPage extends StatefulWidget {
+class TourDetailsPage extends ConsumerStatefulWidget {
   final TourModel tour;
 
   const TourDetailsPage({
@@ -15,14 +17,72 @@ class TourDetailsPage extends StatefulWidget {
   });
 
   @override
-  State<TourDetailsPage> createState() => _TourDetailsPageState();
+  ConsumerState<TourDetailsPage> createState() => _TourDetailsPageState();
 }
 
-class _TourDetailsPageState extends State<TourDetailsPage> {
+class _TourDetailsPageState extends ConsumerState<TourDetailsPage> {
   int _expandedDay = -1;
+  TourModel? _fullTourData;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadFullTourDetails();
+  }
+
+  Future<void> _loadFullTourDetails() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final tourService = ref.read(tourServiceProvider);
+      
+      // Use slug (URL-friendly identifier) to fetch full tour details
+      final slug = widget.tour.slug.isNotEmpty ? widget.tour.slug : widget.tour.id;
+      print('🔍 Fetching tour details using slug: $slug');
+      
+      final fullTour = await tourService.getTourDetail(slug);
+      
+      if (mounted) {
+        setState(() {
+          _fullTourData = fullTour ?? widget.tour;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      print('❌ Error loading full tour details: $e');
+      if (mounted) {
+        setState(() {
+          _fullTourData = widget.tour; // Fallback to passed data
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  TourModel get _currentTour => _fullTourData ?? widget.tour;
+
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return Scaffold(
+        backgroundColor: Colors.white,
+        appBar: AppBar(
+          title: Text(_currentTour.title),
+          backgroundColor: Colors.white,
+          elevation: 0,
+        ),
+        body: Center(
+          child: CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryBlue),
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: Stack(
@@ -56,7 +116,7 @@ class _TourDetailsPageState extends State<TourDetailsPage> {
                             child: _buildInfoCard(
                               icon: Icons.calendar_today,
                               label: 'Duration',
-                              value: '${widget.tour.durationDays} Days, ${widget.tour.durationNights}\nNights',
+                              value: '${_currentTour.durationDays} Days, ${_currentTour.durationNights}\nNights',
                             ),
                           ),
                           const SizedBox(width: 12),
@@ -64,8 +124,8 @@ class _TourDetailsPageState extends State<TourDetailsPage> {
                             child: _buildInfoCard(
                               icon: Icons.directions_bus,
                               label: 'Transport',
-                              value: widget.tour.transportType,
-                              rating: widget.tour.transportRating,
+                              value: _currentTour.transportType,
+                              rating: _currentTour.transportRating,
                             ),
                           ),
                           const SizedBox(width: 12),
@@ -73,8 +133,8 @@ class _TourDetailsPageState extends State<TourDetailsPage> {
                             child: _buildInfoCard(
                               icon: Icons.hotel,
                               label: 'Stay',
-                              value: widget.tour.stayType,
-                              rating: widget.tour.stayRating,
+                              value: _currentTour.stayType,
+                              rating: _currentTour.stayRating,
                             ),
                           ),
                         ],
@@ -139,7 +199,7 @@ class _TourDetailsPageState extends State<TourDetailsPage> {
         children: [
           // Tour Image
           CachedNetworkImage(
-            imageUrl: widget.tour.imageUrl,
+            imageUrl: _currentTour.imageUrl,
             width: double.infinity,
             height: 350,
             fit: BoxFit.cover,
@@ -186,7 +246,7 @@ class _TourDetailsPageState extends State<TourDetailsPage> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  widget.tour.title,
+                  _currentTour.title,
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                         fontWeight: FontWeight.w800,
                         color: AppTheme.textPrimary,
@@ -205,7 +265,7 @@ class _TourDetailsPageState extends State<TourDetailsPage> {
                     const SizedBox(width: 4),
                     Expanded(
                       child: Text(
-                        widget.tour.location,
+                        _currentTour.locationText.isNotEmpty ? _currentTour.locationText : _currentTour.location,
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                               color: AppTheme.textSecondary,
                             ),
@@ -221,13 +281,13 @@ class _TourDetailsPageState extends State<TourDetailsPage> {
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      '${widget.tour.rating}',
+                      '${_currentTour.rating}',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             fontWeight: FontWeight.w600,
                           ),
                     ),
                     Text(
-                      ' (${widget.tour.reviewCount} reviews)',
+                      ' (${_currentTour.reviewCount} reviews)',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             color: AppTheme.textSecondary,
                           ),
@@ -323,6 +383,25 @@ class _TourDetailsPageState extends State<TourDetailsPage> {
   }
 
   Widget _buildBookingProgress() {
+    // Calculate time left until booking deadline
+    String getTimeLeft() {
+      try {
+        final deadline = DateTime.parse(_currentTour.joinDeadline);
+        final now = DateTime.now();
+        final difference = deadline.difference(now);
+        
+        if (difference.isNegative) {
+          return 'Expired';
+        }
+        
+        final days = difference.inDays;
+        final hours = difference.inHours % 24;
+        return '${days}d ${hours}h left';
+      } catch (e) {
+        return 'N/A';
+      }
+    }
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -354,7 +433,7 @@ class _TourDetailsPageState extends State<TourDetailsPage> {
                         Icon(Icons.access_time, size: 14, color: AppTheme.primaryBlue),
                         const SizedBox(width: 4),
                         Text(
-                          '0d 0h left',
+                          getTimeLeft(),
                           style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                 color: AppTheme.primaryBlue,
                                 fontWeight: FontWeight.w700,
@@ -372,7 +451,7 @@ class _TourDetailsPageState extends State<TourDetailsPage> {
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
-                  '${widget.tour.totalSpots - widget.tour.spotsJoined} more needed',
+                  '${_currentTour.totalSpots - _currentTour.spotsJoined} more needed',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: Colors.white,
                         fontWeight: FontWeight.w700,
@@ -389,7 +468,7 @@ class _TourDetailsPageState extends State<TourDetailsPage> {
               Icon(Icons.people_outline, size: 18, color: AppTheme.textSecondary),
               const SizedBox(width: 8),
               Text(
-                '${widget.tour.spotsJoined}/${widget.tour.totalSpots} joined',
+                '${_currentTour.spotsJoined}/${_currentTour.totalSpots} joined',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
@@ -402,7 +481,7 @@ class _TourDetailsPageState extends State<TourDetailsPage> {
           ClipRRect(
             borderRadius: BorderRadius.circular(4),
             child: LinearProgressIndicator(
-              value: widget.tour.spotsJoined / widget.tour.totalSpots,
+              value: _currentTour.spotsJoined / _currentTour.totalSpots,
               backgroundColor: AppTheme.backgroundGray,
               valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryBlue),
               minHeight: 8,
@@ -412,7 +491,7 @@ class _TourDetailsPageState extends State<TourDetailsPage> {
           const SizedBox(height: 4),
           
           Text(
-            '${widget.tour.spotsRemaining} spots remaining (max ${widget.tour.totalSpots})',
+            '${_currentTour.spotsRemaining} spots remaining (max ${_currentTour.totalSpots})',
             style: Theme.of(context).textTheme.bodySmall,
           ),
         ],
@@ -421,7 +500,7 @@ class _TourDetailsPageState extends State<TourDetailsPage> {
   }
 
   Widget _buildTourLead() {
-    final lead = widget.tour.tourLead;
+    final lead = _currentTour.tourLead;
     
     return Container(
       padding: const EdgeInsets.all(16),
@@ -450,8 +529,13 @@ class _TourDetailsPageState extends State<TourDetailsPage> {
             children: [
               CircleAvatar(
                 radius: 24,
-                backgroundImage: NetworkImage(lead.avatarUrl),
-                backgroundColor: AppTheme.backgroundGray,
+                backgroundImage: lead.avatarUrl.isNotEmpty 
+                    ? NetworkImage(lead.avatarUrl) 
+                    : null,
+                backgroundColor: AppTheme.primaryBlue.withValues(alpha: 0.1),
+                child: lead.avatarUrl.isEmpty
+                    ? Icon(Icons.person, color: AppTheme.primaryBlue, size: 28)
+                    : null,
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -502,10 +586,10 @@ class _TourDetailsPageState extends State<TourDetailsPage> {
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           padding: EdgeInsets.zero,
-          itemCount: widget.tour.itinerary.length,
+          itemCount: _currentTour.itinerary.length,
           separatorBuilder: (context, index) => const SizedBox(height: 12),
           itemBuilder: (context, index) {
-            final day = widget.tour.itinerary[index];
+            final day = _currentTour.itinerary[index];
             final isExpanded = _expandedDay == index;
             
             return Container(
@@ -625,7 +709,7 @@ class _TourDetailsPageState extends State<TourDetailsPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              ...widget.tour.included.map((item) => Padding(
+              ..._currentTour.included.map((item) => Padding(
                     padding: const EdgeInsets.only(bottom: 12),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -646,7 +730,7 @@ class _TourDetailsPageState extends State<TourDetailsPage> {
                     ),
                   )),
               
-              if (widget.tour.notIncluded.isNotEmpty) ...[
+              if (_currentTour.notIncluded.isNotEmpty) ...[
                 const SizedBox(height: 8),
                 Text(
                   'Not Included',
@@ -656,7 +740,7 @@ class _TourDetailsPageState extends State<TourDetailsPage> {
                       ),
                 ),
                 const SizedBox(height: 8),
-                ...widget.tour.notIncluded.map((item) => Padding(
+                ..._currentTour.notIncluded.map((item) => Padding(
                       padding: const EdgeInsets.only(bottom: 8),
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -712,7 +796,7 @@ class _TourDetailsPageState extends State<TourDetailsPage> {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  widget.tour.meetingPoint.location,
+                  _currentTour.meetingPoint.location,
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
               ),
@@ -724,7 +808,7 @@ class _TourDetailsPageState extends State<TourDetailsPage> {
               Icon(Icons.access_time, size: 18, color: AppTheme.textSecondary),
               const SizedBox(width: 8),
               Text(
-                widget.tour.meetingPoint.time,
+                _currentTour.meetingPoint.time,
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
             ],
@@ -759,7 +843,7 @@ class _TourDetailsPageState extends State<TourDetailsPage> {
           ),
           const SizedBox(height: 12),
           Text(
-            widget.tour.refundPolicy.description,
+            _currentTour.refundPolicy.description,
             style: Theme.of(context).textTheme.bodyMedium,
           ),
         ],
@@ -787,7 +871,7 @@ class _TourDetailsPageState extends State<TourDetailsPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Total Cost: ৳${widget.tour.fullCost}',
+                  'Total Cost: ৳${_currentTour.fullCost}',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         color: AppTheme.textPrimary,
                         fontWeight: FontWeight.w700,
@@ -799,7 +883,7 @@ class _TourDetailsPageState extends State<TourDetailsPage> {
                   textBaseline: TextBaseline.alphabetic,
                   children: [
                     Text(
-                      '৳${widget.tour.price}',
+                      '৳${_currentTour.price}',
                       style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                             color: AppTheme.primaryBlue,
                             fontWeight: FontWeight.w800,
