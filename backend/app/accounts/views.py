@@ -487,13 +487,15 @@ class GoogleLoginAPIView(APIView):
                 "full_name": data["full_name"],
                 "auth_provider": AuthProviderChoices.GOOGLE,
                 "google_id": data["google_id"],
+                "profile_pic": data.get("picture"),
             },
         )
 
         if not created and user.google_id is None:
             user.google_id = data["google_id"]
             user.auth_provider = AuthProviderChoices.GOOGLE
-            user.save(update_fields=["google_id", "auth_provider"])
+            user.profile_pic = data.get("picture")
+            user.save(update_fields=["google_id", "auth_provider", "profile_pic"])
 
         if created:
             user.set_unusable_password()
