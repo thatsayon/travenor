@@ -2,7 +2,8 @@ from rest_framework import generics, permissions
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
-from django.db.models import Count, Sum, Avg, Exists, OuterRef, Value
+from django.db.models import Count, Sum, Avg, Exists, OuterRef, Value, Subquery, IntegerField
+from django.db.models.functions import Coalesce
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 
@@ -219,6 +220,12 @@ class UpcomingToursView(generics.ListAPIView):
     serializer_class = MyTourSerializer
 
     def get_queryset(self):
+        tour_bookings_sum = TourBooking.objects.filter(
+            tour=OuterRef('tour')
+        ).values('tour').annotate(
+            total_seats=Sum('seats')
+        ).values('total_seats')
+
         return (
             TourBooking.objects
             .filter(
@@ -231,6 +238,9 @@ class UpcomingToursView(generics.ListAPIView):
                 "tour__division",
                 "tour__district",
                 "tour__upazila",
+            )
+            .annotate(
+                tour_joined_count=Coalesce(Subquery(tour_bookings_sum, output_field=IntegerField()), 0)
             )
             .order_by("tour__start_datetime")
         )

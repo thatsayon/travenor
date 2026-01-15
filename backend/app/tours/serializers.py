@@ -357,26 +357,32 @@ class JoinTourSerializer(serializers.Serializer):
 
 class MyTourSerializer(serializers.ModelSerializer):
     tour_title = serializers.CharField(source="tour.title")
+    tour_slug = serializers.CharField(source="tour.slug") 
     tour_image = serializers.SerializerMethodField()
     start_date = serializers.DateTimeField(source="tour.start_datetime")
     location = serializers.SerializerMethodField()
+    min_group_size = serializers.IntegerField(source="tour.min_group_size")
     price = serializers.DecimalField(
         source="tour.upfront_payment",
         max_digits=10,
         decimal_places=2
     )
+    message = serializers.SerializerMethodField()
 
     class Meta:
         model = TourBooking
         fields = (
             "id",
             "tour_title",
+            "tour_slug",
             "tour_image",
             "start_date",
             "location",
+            "min_group_size",
             "status",
             "price",
             "booking_reference",
+            "message",
         )
 
     def get_tour_image(self, obj):
@@ -394,3 +400,20 @@ class MyTourSerializer(serializers.ModelSerializer):
             parts.append(tour.upazila.name)
 
         return ", ".join(parts)
+
+    def get_message(self, obj):
+        if obj.status == "pending":
+            return "Your booking is pending approval."
+        
+        if obj.status == "paid":
+            # Check min group size
+            joined = getattr(obj, "tour_joined_count", 0)
+            min_size = obj.tour.min_group_size
+            
+            if joined < min_size:
+                needed = min_size - joined
+                return f"Confirmed! Waiting for {needed} more people to join."
+            
+            return "Tour confirmed! Get ready for your trip."
+            
+        return ""
