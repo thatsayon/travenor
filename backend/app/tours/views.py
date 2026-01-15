@@ -2,7 +2,7 @@ from rest_framework import generics, permissions
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
-from django.db.models import Count, Sum, Avg
+from django.db.models import Count, Sum, Avg, Exists, OuterRef, Value
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 
@@ -21,7 +21,7 @@ class TourListView(generics.ListAPIView):
     serializer_class = TourListSerializer
 
     def get_queryset(self):
-        return (
+        qs = (
             Tour.objects
             .filter(is_active=True)
             .select_related(
@@ -37,6 +37,18 @@ class TourListView(generics.ListAPIView):
             .order_by("-created_at")
         )
 
+        if self.request.user.is_authenticated:
+            qs = qs.annotate(
+                is_booked=Exists(
+                    TourBooking.objects.filter(
+                        tour=OuterRef("pk"),
+                        user=self.request.user
+                    )
+                )
+            )
+        
+        return qs
+
 
 class TourDetailView(generics.RetrieveAPIView):
     permission_classes = [permissions.AllowAny]
@@ -44,7 +56,7 @@ class TourDetailView(generics.RetrieveAPIView):
     lookup_field = "slug"
 
     def get_queryset(self):
-        return (
+        qs = (
             Tour.objects
             .filter(is_active=True)
             .select_related(
@@ -61,6 +73,18 @@ class TourDetailView(generics.RetrieveAPIView):
                 stay_rating=Avg("stay__reviews__rating"),
             )
         )
+
+        if self.request.user.is_authenticated:
+            qs = qs.annotate(
+                is_booked=Exists(
+                    TourBooking.objects.filter(
+                        tour=OuterRef("pk"),
+                        user=self.request.user
+                    )
+                )
+            )
+
+        return qs
 
 
 class JoinTourView(APIView):

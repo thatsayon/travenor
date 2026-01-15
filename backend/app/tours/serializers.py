@@ -26,6 +26,7 @@ class TourListSerializer(serializers.ModelSerializer):
         read_only=True
     )
     rating_count = serializers.IntegerField(read_only=True)
+    is_booked = serializers.SerializerMethodField()
 
     class Meta:
         model = Tour
@@ -51,6 +52,7 @@ class TourListSerializer(serializers.ModelSerializer):
             "rating",
             "rating_count",
 
+            "is_booked",
         ]
 
     def get_spots_remaining(self, obj):
@@ -113,6 +115,9 @@ class TourListSerializer(serializers.ModelSerializer):
         if obj.max_capacity == 0:
             return 0
         return int((joined / obj.max_capacity) * 100)
+
+    def get_is_booked(self, obj):
+        return getattr(obj, "is_booked", False)
 
 
 class TourDayActivitySerializer(serializers.ModelSerializer):
@@ -180,6 +185,7 @@ class TourDetailSerializer(serializers.ModelSerializer):
         read_only=True
     )
     rating_count = serializers.IntegerField(read_only=True)
+    is_booked = serializers.SerializerMethodField()
 
     tour_lead = serializers.SerializerMethodField()
 
@@ -233,6 +239,7 @@ class TourDetailSerializer(serializers.ModelSerializer):
             # rating
             "rating",
             "rating_count",
+            "is_booked",
 
             # meeting & guide
             "meeting_point",
@@ -318,6 +325,9 @@ class TourDetailSerializer(serializers.ModelSerializer):
             "name": obj.stay.name,
             "rating": obj.stay_rating,
         }
+
+    def get_is_booked(self, obj):
+        return getattr(obj, "is_booked", False)
 
     def get_tour_lead(self, obj):
         if not obj.tour_lead:
