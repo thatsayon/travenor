@@ -7,9 +7,14 @@ def get_tokens_for_user(user):
     refresh["email"] = user.email
     refresh["full_name"] = getattr(user, "full_name", "")
     refresh["username"] = user.username
-    refresh["profile_pic"] = (
-        user.profile_pic.url if user.profile_pic else None
-    )
+    if user.profile_pic:
+        refresh["profile_pic"] = (
+            user.profile_pic.url
+            if hasattr(user.profile_pic, "url")
+            else str(user.profile_pic)
+        )
+    else:
+        refresh["profile_pic"] = None
     refresh["auth_provider"] = user.auth_provider
 
     return {
