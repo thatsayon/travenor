@@ -258,11 +258,11 @@ class BookingCard extends StatelessWidget {
               child: Row(
                 children: [
                   Icon(
-                    Icons.info_outline_rounded,
+                    isPaid ? Icons.check_circle_outline : Icons.info_outline_rounded,
                     size: 16,
                     color: statusColor,
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 4),
                   Expanded(
                     child: Text(
                       booking.message!,
