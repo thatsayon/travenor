@@ -223,19 +223,56 @@ class ProfileService {
   /// Cache profile data from API response
   Future<void> _cacheProfileFromApi(Map<String, dynamic> userData) async {
     try {
-      // Map API response to UserProfileModel
-      final profile = UserProfileModel(
-        fullName: userData['full_name'] ?? userData['fullName'],
-        phoneNumber: userData['phone_number'] ?? userData['phoneNumber'],
-        email: userData['email'],
-        emergencyContact: userData['emergency_contact'] ?? userData['emergencyContact'],
-        lastUpdated: DateTime.now(),
-      );
-      
+      // Map API response to UserProfileModel using fromApiJson
+      final profile = UserProfileModel.fromApiJson(userData);
       await saveProfile(profile);
     } catch (e) {
       print('⚠️ Error caching profile: $e');
     }
+  }
+
+  /// Check if profile is complete using backend API data
+  /// Returns true if all required fields are filled, false otherwise
+  Future<bool> isProfileCompleteFromApi() async {
+    if (_dioClient == null) {
+      print('⚠️ DioClient not initialized, falling back to local check');
+      return await isProfileComplete();
+    }
+
+    try {
+      final response = await getProfileFromApi();
+      
+      if (!response.success || response.userData == null) {
+        print('⚠️ Failed to fetch profile from API, falling back to local check');
+        return await isProfileComplete();
+      }
+
+      final userData = response.userData!;
+      
+      // Check all required fields from backend API
+      final bool isComplete = 
+        _isFieldValid(userData['full_name']) &&
+        _isFieldValid(userData['gender']) &&
+        _isFieldValid(userData['date_of_birth']) &&
+        _isFieldValid(userData['blood_group']) &&
+        _isFieldValid(userData['present_address']) &&
+        _isFieldValid(userData['mobile_number']) &&
+        _isFieldValid(userData['emergency_contact_number']) &&
+        _isFieldValid(userData['emergency_contact_relationship']);
+
+      return isComplete;
+    } catch (e) {
+      print('⚠️ Error checking profile completeness: $e');
+      // Fallback to local check if API fails
+      return await isProfileComplete();
+    }
+  }
+
+  /// Helper method to check if a field is valid (not null and not empty)
+  bool _isFieldValid(dynamic value) {
+    if (value == null) return false;
+    if (value is String) return value.trim().isNotEmpty;
+    return true; // For non-string types like DateTime
   }
 }
 

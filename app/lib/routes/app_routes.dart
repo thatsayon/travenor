@@ -8,7 +8,10 @@ import '../screens/auth/sign_up_page.dart';
 import '../screens/auth/forgot_password_page.dart';
 import '../screens/auth/otp_verification_page.dart';
 import '../screens/auth/reset_password_page.dart';
+import '../screens/auth/reset_password_page.dart';
 import '../screens/main_navigation.dart';
+import '../screens/tour/tour_details_page.dart';
+import '../models/tour_model.dart';
 
 class AppRoutes {
   static const String splash = '/';
@@ -20,6 +23,7 @@ class AppRoutes {
   static const String resetPassword = '/reset-password';
   static const String home = '/home';
   static const String onboarding = '/onboarding';
+  static const String tourDetails = '/tour-details';
 
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
@@ -73,10 +77,20 @@ class AppRoutes {
           builder: (_) => const OnboardingPage(),
         );
         
-      case home:
+      case tourDetails:
+        final tour = settings.arguments as TourModel;
         return MaterialPageRoute(
           settings: settings,
-          builder: (_) => const MainNavigation(),
+          builder: (_) => TourDetailsPage(tour: tour),
+        );
+
+      case home:
+        final args = settings.arguments as Map<String, dynamic>?;
+        return MaterialPageRoute(
+          settings: settings,
+          builder: (_) => MainNavigation(
+            initialIndex: args?['initialTab'] ?? 0,
+          ),
         );
 
       default:

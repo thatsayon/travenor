@@ -78,6 +78,9 @@ class TourService {
         }
         
         print('✅ Fetched ${toursJson.length} tours from API');
+        if (toursJson.isNotEmpty) {
+          print('📋 First tour JSON: ${toursJson[0]}');
+        }
         return toursJson.map((json) => TourModel.fromJson(json as Map<String, dynamic>)).toList();
       }
       return [];
@@ -93,6 +96,7 @@ class TourService {
       final response = await _dioClient.dio.get('/tour/detail/$slug/');
       
       if (response.statusCode == 200) {
+        print('📋 Tour detail response: ${response.data}');
         return TourModel.fromJson(response.data as Map<String, dynamic>);
       }
       return null;
@@ -121,6 +125,18 @@ class TourService {
   Future<JoinTourResponse> joinTour(String slug) async {
     try {
       final response = await _dioClient.dio.post('/tour/join/$slug/');
+      
+      // Treat 200/201 as success regardless of body content
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = response.data is Map<String, dynamic> ? response.data : <String, dynamic>{};
+        return JoinTourResponse(
+          success: true,
+          message: data['message'],
+          bookingId: data['booking_id'] ?? data['id'],
+          error: null,
+        );
+      }
+      
       return JoinTourResponse.fromJson(response.data);
     } on DioException catch (e) {
       if (e.response?.data != null) {
@@ -160,6 +176,19 @@ class TourService {
           'accepted_terms': acceptedTerms,
         },
       );
+
+      // Treat 200/201 as success
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        // Handle Map<dynamic, dynamic> safely
+        final data = response.data is Map ? Map<String, dynamic>.from(response.data) : <String, dynamic>{};
+        return ConfirmBookingResponse(
+          success: true,
+          message: data['message']?.toString(), // Ensure string
+          bookingDetails: data['booking'] != null ? Map<String, dynamic>.from(data['booking']) : data, // Fallback to safe data
+          error: null,
+        );
+      }
+
       return ConfirmBookingResponse.fromJson(response.data);
     } on DioException catch (e) {
       if (e.response?.data != null) {
@@ -173,24 +202,24 @@ class TourService {
   }
 
   /// Get user's upcoming tours
-  Future<List<TourModel>> getUpcomingTours() async {
+  Future<List<BookingModel>> getUpcomingTours() async {
     try {
       final response = await _dioClient.dio.get('/tour/upcoming/');
       
       if (response.statusCode == 200) {
         final data = response.data;
-        final List<dynamic> toursJson;
+        final List<dynamic> resultsJson;
         
-        if (data is List) {
-          toursJson = data;
-        } else if (data is Map && data['tours'] != null) {
-          toursJson = data['tours'] as List;
+        if (data is Map && data['results'] != null) {
+          resultsJson = data['results'] as List;
+        } else if (data is List) {
+          resultsJson = data;
         } else {
-          print('⚠️ Unexpected upcoming tours response format');
+          print('⚠️ Unexpected upcoming tours response format: $data');
           return [];
         }
         
-        return toursJson.map((json) => TourModel.fromJson(json as Map<String, dynamic>)).toList();
+        return resultsJson.map((json) => BookingModel.fromApiJson(json as Map<String, dynamic>)).toList();
       }
       return [];
     } on DioException catch (e) {
@@ -200,24 +229,24 @@ class TourService {
   }
 
   /// Get user's past tours
-  Future<List<TourModel>> getPastTours() async {
+  Future<List<BookingModel>> getPastTours() async {
     try {
       final response = await _dioClient.dio.get('/tour/past/');
       
       if (response.statusCode == 200) {
         final data = response.data;
-        final List<dynamic> toursJson;
+        final List<dynamic> resultsJson;
         
-        if (data is List) {
-          toursJson = data;
-        } else if (data is Map && data['tours'] != null) {
-          toursJson = data['tours'] as List;
+        if (data is Map && data['results'] != null) {
+          resultsJson = data['results'] as List;
+        } else if (data is List) {
+          resultsJson = data;
         } else {
-          print('⚠️ Unexpected past tours response format');
+          print('⚠️ Unexpected past tours response format: $data');
           return [];
         }
         
-        return toursJson.map((json) => TourModel.fromJson(json as Map<String, dynamic>)).toList();
+        return resultsJson.map((json) => BookingModel.fromApiJson(json as Map<String, dynamic>)).toList();
       }
       return [];
     } on DioException catch (e) {

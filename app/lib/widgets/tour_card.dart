@@ -93,7 +93,7 @@ class TourCard extends StatelessWidget {
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          '0d 0h left',
+                          tour.timeLeft.formattedShort,
                           style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                 color: AppTheme.textPrimary,
                                 fontWeight: FontWeight.w600,

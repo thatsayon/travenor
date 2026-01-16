@@ -72,7 +72,7 @@ class UserProfileModel {
     };
   }
 
-  // Create from JSON
+  // Create from JSON (local storage - camelCase)
   factory UserProfileModel.fromJson(Map<String, dynamic> json) {
     return UserProfileModel(
       fullName: json['fullName'],
@@ -88,6 +88,22 @@ class UserProfileModel {
       lastUpdated: json['lastUpdated'] != null
           ? DateTime.parse(json['lastUpdated'])
           : null,
+    );
+  }
+
+  // Create from API JSON (snake_case field names)
+  factory UserProfileModel.fromApiJson(Map<String, dynamic> json) {
+    return UserProfileModel(
+      fullName: json['full_name'],
+      phoneNumber: json['mobile_number'],
+      email: json['email'],
+      emergencyContact: json['emergency_contact_number'],
+      gender: json['gender'],
+      dateOfBirth: json['date_of_birth'] != null ? DateTime.parse(json['date_of_birth']) : null,
+      bloodGroup: json['blood_group'],
+      presentAddress: json['present_address'],
+      emergencyContactRelation: json['emergency_contact_relationship'],
+      lastUpdated: DateTime.now(),
     );
   }
 

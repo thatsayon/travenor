@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/services.dart';
 import 'package:dio/dio.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import '../models/user_model.dart';
@@ -137,9 +138,17 @@ class GoogleSignInService {
         
         throw AuthException(cleanMessage);
       }
-    } catch (error) {
+    } catch (error, stackTrace) {
       print('💥 Exception caught: $error');
+      print('Stack trace: $stackTrace');
       
+      if (error is PlatformException) {
+        print('🔧 Platform Exception Details:');
+        print('   Code: ${error.code}');
+        print('   Message: ${error.message}');
+        print('   Details: ${error.details}');
+      }
+
       if (error is AuthException) rethrow;
 
       if (error is DioException) {
@@ -153,7 +162,7 @@ class GoogleSignInService {
          }
       }
       
-      throw AuthException('Sign In unexpected error. Please try again.');
+      throw AuthException('Sign In unexpected error: $error');
     }
   }
 

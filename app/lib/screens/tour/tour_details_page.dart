@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../main.dart';
 import '../../models/tour_model.dart';
+import '../../models/user_profile_model.dart';
 import '../../services/profile_service.dart';
 import '../../providers/auth_provider.dart';
 import '../profile/complete_profile_page.dart';
@@ -24,6 +25,7 @@ class _TourDetailsPageState extends ConsumerState<TourDetailsPage> {
   int _expandedDay = -1;
   TourModel? _fullTourData;
   bool _isLoading = true;
+  bool _isJoining = false;
 
   @override
   void initState() {
@@ -45,9 +47,24 @@ class _TourDetailsPageState extends ConsumerState<TourDetailsPage> {
       
       final fullTour = await tourService.getTourDetail(slug);
       
+      // Also check explicitly if the user has joined this tour
+      // This is needed because the public tour detail API might not carry user-specific booking status
+      bool isBooked = fullTour?.isBooked ?? widget.tour.isBooked;
+      if (!isBooked) { // Only check if not already known as booked
+        try {
+          final joinStatus = await tourService.checkJoinStatus(slug);
+          print('🔍 Join status check: $joinStatus');
+          if (joinStatus != null && (joinStatus['is_booked'] == true || joinStatus['joined'] == true || joinStatus['status'] == 'confirmed')) {
+            isBooked = true;
+          }
+        } catch (e) {
+          print('⚠️ Failed to check join status specifically: $e');
+        }
+      }
+
       if (mounted) {
         setState(() {
-          _fullTourData = fullTour ?? widget.tour;
+          _fullTourData = (fullTour ?? widget.tour).copyWith(isBooked: isBooked);
           _isLoading = false;
         });
       }
@@ -145,7 +162,12 @@ class _TourDetailsPageState extends ConsumerState<TourDetailsPage> {
                       // Booking Progress
                       _buildBookingProgress(),
                       
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 16),
+                      
+                      // Tour Start
+                      _buildTourStart(),
+                      
+                      const SizedBox(height: 16),
                       
                       // Tour Lead
                       _buildTourLead(),
@@ -396,7 +418,8 @@ class _TourDetailsPageState extends ConsumerState<TourDetailsPage> {
         
         final days = difference.inDays;
         final hours = difference.inHours % 24;
-        return '${days}d ${hours}h left';
+        final minutes = difference.inMinutes % 60;
+        return '${days}d ${hours}h ${minutes}m';
       } catch (e) {
         return 'N/A';
       }
@@ -497,6 +520,106 @@ class _TourDetailsPageState extends ConsumerState<TourDetailsPage> {
         ],
       ),
     );
+  }
+
+  // Convert 24-hour time (HH:mm:ss) to 12-hour format with AM/PM
+  String formatTimeTo12Hour(String time24) {
+    try {
+      // Parse time in format "HH:mm:ss" or "HH:mm"
+      final parts = time24.split(':');
+      if (parts.isEmpty) return time24;
+      
+      int hour = int.parse(parts[0]);
+      final minute = parts.length > 1 ? parts[1] : '00';
+      
+      final period = hour >= 12 ? 'PM' : 'AM';
+      if (hour > 12) {
+        hour -= 12;
+      } else if (hour == 0) {
+        hour = 12;
+      }
+      
+      return '$hour:$minute $period';
+    } catch (e) {
+      return time24; // Return original if parsing fails
+    }
+  }
+
+  // Format ISO 8601 datetime to readable format (e.g., "Fri, Jan 17, 2026 at 10:08 PM")
+  String _formatStartDateTime(String isoDateTime) {
+    try {
+      final dateTime = DateTime.parse(isoDateTime);
+      
+      // Day of week
+      const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+      final weekDay = weekDays[dateTime.weekday - 1];
+      
+      // Month
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      final month = months[dateTime.month - 1];
+      
+      // Time in 12-hour format
+      int hour = dateTime.hour;
+      final period = hour >= 12 ? 'PM' : 'AM';
+      if (hour > 12) {
+        hour -= 12;
+      } else if (hour == 0) {
+        hour = 12;
+      }
+      final minute = dateTime.minute.toString().padLeft(2, '0');
+      
+      return '$weekDay, $month ${dateTime.day}, ${dateTime.year} at $hour:$minute $period';
+    } catch (e) {
+      return isoDateTime;
+    }
+  }
+
+  // Format ISO 8601 datetime to short format without year (e.g., "Fri, Jan 17 at 10:08 PM")
+  String _formatStartDateTimeShort(String isoDateTime) {
+    try {
+      final dateTime = DateTime.parse(isoDateTime);
+      
+      // Day of week
+      const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+      final weekDay = weekDays[dateTime.weekday - 1];
+      
+      // Month
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      final month = months[dateTime.month - 1];
+      
+      // Time in 12-hour format
+      int hour = dateTime.hour;
+      final period = hour >= 12 ? 'PM' : 'AM';
+      if (hour > 12) {
+        hour -= 12;
+      } else if (hour == 0) {
+        hour = 12;
+      }
+      final minute = dateTime.minute.toString().padLeft(2, '0');
+      
+      return '$weekDay, $month ${dateTime.day} at $hour:$minute $period';
+    } catch (e) {
+      return isoDateTime;
+    }
+  }
+
+  // Format ISO 8601 datetime to date only (e.g., "Fri, Jan 17")
+  String _formatDateOnly(String isoDateTime) {
+    try {
+      final dateTime = DateTime.parse(isoDateTime);
+      
+      // Day of week
+      const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+      final weekDay = weekDays[dateTime.weekday - 1];
+      
+      // Month
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      final month = months[dateTime.month - 1];
+      
+      return '$weekDay, $month ${dateTime.day}';
+    } catch (e) {
+      return isoDateTime;
+    }
   }
 
   Widget _buildTourLead() {
@@ -808,10 +931,60 @@ class _TourDetailsPageState extends ConsumerState<TourDetailsPage> {
               Icon(Icons.access_time, size: 18, color: AppTheme.textSecondary),
               const SizedBox(width: 8),
               Text(
-                _currentTour.meetingPoint.time,
+                '${_formatDateOnly(_currentTour.startDateTime)} • ${formatTimeTo12Hour(_currentTour.meetingPoint.time)}',
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTourStart() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppTheme.borderGray),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppTheme.primaryBlue.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              Icons.event_available,
+              size: 28,
+              color: AppTheme.primaryBlue,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Tour Starts',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.textSecondary,
+                      ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  _formatStartDateTimeShort(_currentTour.startDateTime),
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.primaryBlue.withValues(alpha: 0.85),
+                      ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -843,7 +1016,7 @@ class _TourDetailsPageState extends ConsumerState<TourDetailsPage> {
           ),
           const SizedBox(height: 12),
           Text(
-            _currentTour.refundPolicy.description,
+            'If the minimum group size (${_currentTour.refundPolicy.minimumGroupSize} travelers) isn\'t reached by the deadline, you\'ll receive a full refund of your upfront payment within 3-5 business days.',
             style: Theme.of(context).textTheme.bodyMedium,
           ),
         ],
@@ -851,17 +1024,115 @@ class _TourDetailsPageState extends ConsumerState<TourDetailsPage> {
     );
   }
 
+  Future<void> _handleJoinTour() async {
+    setState(() => _isJoining = true);
+
+    try {
+      final tourService = ref.read(tourServiceProvider);
+      final dioClient = ref.read(dioClientProvider);
+      final profileService = ProfileService(dioClient);
+
+      // 1. Call Join Tour API
+      final slug = widget.tour.slug.isNotEmpty
+          ? widget.tour.slug
+          : widget.tour.id;
+      print('🚀 Joining tour: $slug');
+
+      final joinResponse = await tourService.joinTour(slug);
+
+      if (!mounted) return;
+
+      if (joinResponse.success) {
+        print('✅ Join API successful. Fetching profile...');
+
+        // 2. Fetch Profile for Confirmation Page
+        final apiResponse = await profileService.getProfileFromApi();
+
+        if (!mounted) return;
+
+        if (apiResponse.success && apiResponse.userData != null) {
+          final profile = UserProfileModel.fromApiJson(apiResponse.userData!);
+
+          // Check if profile is complete
+          final isProfileComplete = await profileService.isProfileCompleteFromApi();
+          
+          if (mounted) {
+            if (isProfileComplete) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => BookingConfirmationPage(
+                    tour: widget.tour,
+                    userProfile: profile,
+                    bookingId: joinResponse.bookingId ?? '',
+                  ),
+                ),
+              );
+            } else {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => CompleteProfilePage(
+                    tour: widget.tour,
+                    bookingId: joinResponse.bookingId ?? '',
+                  ),
+                ),
+              );
+            }
+          }
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('Tour joined, but failed to load profile details.'),
+              backgroundColor: AppTheme.warning,
+            ),
+          );
+        }
+      } else {
+        print('❌ Join API failed: ${joinResponse.error}');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(joinResponse.error ?? 'Failed to join tour'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      print('❌ Error joining tour: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('An error occurred: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isJoining = false);
+      }
+    }
+  }
+
   Widget _buildBottomBar() {
+    // Determine button state
+    bool isBooked = _currentTour.isBooked;
+    bool isFull = _currentTour.spotsRemaining <= 0;
+    bool canJoin = !isBooked && !isFull && !_isLoading;
+    
+    String buttonText = 'Join This Tour';
+    if (_isJoining) buttonText = 'Processing...';
+    else if (isBooked) buttonText = 'Booked';
+    else if (isFull) buttonText = 'Tour Full';
+
     return Container(
-      padding: EdgeInsets.fromLTRB(20, 20, 20, MediaQuery.of(context).padding.bottom + 20),
+      padding: EdgeInsets.fromLTRB(
+        20, 
+        16, 
+        20, 
+        MediaQuery.of(context).padding.bottom + 16
+      ),
       decoration: BoxDecoration(
         color: Colors.white,
-        border: Border(
-          top: BorderSide(
-            color: AppTheme.borderGray,
-            width: 1,
-          ),
-        ),
+        border: Border(top: BorderSide(color: AppTheme.borderGray)),
       ),
       child: Row(
         children: [
@@ -871,85 +1142,68 @@ class _TourDetailsPageState extends ConsumerState<TourDetailsPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Total Cost: ৳${_currentTour.fullCost}',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: AppTheme.textPrimary,
-                        fontWeight: FontWeight.w700,
+                  'Total Price',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppTheme.textSecondary,
                       ),
                 ),
-                const SizedBox(height: 2),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.baseline,
-                  textBaseline: TextBaseline.alphabetic,
-                  children: [
-                    Text(
-                      '৳${_currentTour.price}',
-                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                            color: AppTheme.primaryBlue,
-                            fontWeight: FontWeight.w800,
-                          ),
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      'Upfront',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            color: AppTheme.textPrimary,
-                            fontWeight: FontWeight.w700,
-                            fontSize: 14,
-                          ),
-                    ),
-                  ],
+                RichText(
+                  text: TextSpan(
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                          color: AppTheme.primaryBlue,
+                          fontWeight: FontWeight.w800,
+                        ),
+                    children: [
+                      TextSpan(text: '৳${_currentTour.fullCost}'),
+                      TextSpan(
+                        text: '/person',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: AppTheme.textSecondary,
+                            ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
           ),
           const SizedBox(width: 16),
-          SizedBox(
-            width: 160,
-            child: ElevatedButton(
-              onPressed: () async {
-                final profileService = ProfileService();
-                final isComplete = await profileService.isProfileComplete();
-                
-                if (!mounted) return;
-                
-                if (isComplete) {
-                  final profile = await profileService.getProfile();
-                  if (profile != null && mounted) {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => BookingConfirmationPage(
-                          tour: widget.tour,
-                          userProfile: profile,
+          Expanded(
+            flex: 2, // Give more space to button
+            child: SizedBox(
+              height: 56,
+              child: ElevatedButton(
+                onPressed: canJoin ? _handleJoinTour : null,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.primaryBlue,
+                  // Use theme color with reduced opacity for Booked state, Grey for Full/Loading
+                  disabledBackgroundColor: isBooked 
+                      ? AppTheme.primaryBlue.withValues(alpha: 0.6) 
+                      : AppTheme.textLight,
+                  // Ensure text remains white even when disabled
+                  disabledForegroundColor: Colors.white,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 0,
+                ),
+                child: _isJoining
+                    ? const SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        ),
+                      )
+                    : Text(
+                        buttonText,
+                        style: const TextStyle(
+                          fontSize: 16, 
+                          fontWeight: FontWeight.w700,
                         ),
                       ),
-                    );
-                  }
-                } else {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => CompleteProfilePage(tour: widget.tour),
-                    ),
-                  );
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.primaryBlue,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                elevation: 0,
-              ),
-              child: Text(
-                'Join This Tour',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                    ),
               ),
             ),
           ),

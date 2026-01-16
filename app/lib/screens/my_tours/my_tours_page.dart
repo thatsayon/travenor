@@ -14,8 +14,8 @@ class MyToursPage extends ConsumerStatefulWidget {
 
 class _MyToursPageState extends ConsumerState<MyToursPage> with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  List<TourModel> _upcomingTours = [];
-  List<TourModel> _pastTours = [];
+  List<BookingModel> _upcomingTours = [];
+  List<BookingModel> _pastTours = [];
   bool _isLoading = true;
   String? _error;
 
@@ -205,7 +205,7 @@ class _MyToursPageState extends ConsumerState<MyToursPage> with SingleTickerProv
     );
   }
 
-  Widget _buildTourList(List<TourModel> tours, {required bool isUpcoming}) {
+  Widget _buildTourList(List<BookingModel> tours, {required bool isUpcoming}) {
     if (tours.isEmpty) {
       return Center(
         child: Padding(
@@ -248,15 +248,7 @@ class _MyToursPageState extends ConsumerState<MyToursPage> with SingleTickerProv
         padding: const EdgeInsets.all(16),
         itemCount: tours.length,
         itemBuilder: (context, index) {
-          final tour = tours[index];
-          // Convert TourModel to BookingModel for display
-          final booking = BookingModel(
-            id: tour.id,
-            tour: tour,
-            bookingDate: DateTime.now().toIso8601String(),
-            status: isUpcoming ? 'confirmed' : 'completed',
-            pricePaid: tour.price,
-          );
+          final booking = tours[index];
           return BookingCard(booking: booking);
         },
       ),

@@ -22,6 +22,14 @@
           }
         },
         {
+          "client_id": "726287101564-ujqer48s9icgdtdtood9u1ujirr4adm3.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.travenor",
+            "certificate_hash": "7c19f4aad69108243e8f1b0a54a91c518609e5f7"
+          }
+        },
+        {
           "client_id": "726287101564-5psur8st5s5rp95q08q4el74q2n1jml2.apps.googleusercontent.com",
           "client_type": 3
         }

@@ -11,8 +11,59 @@ int _parseInt(dynamic value, {int defaultValue = 0}) {
   if (value == null) return defaultValue;
   if (value is int) return value;
   if (value is double) return value.toInt();
-  if (value is String) return int.tryParse(value) ?? defaultValue;
+  if (value is String) {
+    // Try parsing as int first
+    final intValue = int.tryParse(value);
+    if (intValue != null) return intValue;
+    
+    // If that fails, try parsing as double then convert to int (handles "5000.00")
+    final doubleValue = double.tryParse(value);
+    if (doubleValue != null) return doubleValue.toInt();
+    
+    return defaultValue;
+  }
   return defaultValue;
+}
+
+bool _parseBool(dynamic value, {bool defaultValue = false}) {
+  if (value == null) return defaultValue;
+  if (value is bool) return value;
+  if (value is int) return value == 1;
+  if (value is String) {
+    final v = value.toLowerCase();
+    return v == 'true' || v == '1' || v == 'yes';
+  }
+  return defaultValue;
+}
+
+class TimeLeft {
+  final int days;
+  final int hours;
+  final int minutes;
+
+  TimeLeft({
+    required this.days,
+    required this.hours,
+    required this.minutes,
+  });
+
+  String get formattedShort => '${days}d ${hours}h ${minutes}m';
+  String get formattedLong => '${days} days, ${hours} hours, ${minutes} minutes';
+
+  factory TimeLeft.fromJson(Map<String, dynamic>? json) {
+    if (json == null) return TimeLeft(days: 0, hours: 0, minutes: 0);
+    return TimeLeft(
+      days: _parseInt(json['days']),
+      hours: _parseInt(json['hours']),
+      minutes: _parseInt(json['minutes']),
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+    'days': days,
+    'hours': hours,
+    'minutes': minutes,
+  };
 }
 
 class TourModel {
@@ -31,6 +82,7 @@ class TourModel {
   final String imageUrl;
   final bool isVerifiedLead;
   final bool hasRefundGuarantee;
+  final bool isBooked;
   final String transportType;
   final double transportRating;
   final String stayType;
@@ -38,6 +90,8 @@ class TourModel {
   final int totalSpots;
   final int spotsJoined;
   final String joinDeadline; // ISO 8601 format
+  final String startDateTime; // Tour start date/time in ISO 8601 format
+  final TimeLeft timeLeft; // Time remaining to join
   final TourLeadModel tourLead;
   final List<DayItinerary> itinerary;
   final List<String> included;
@@ -61,6 +115,7 @@ class TourModel {
     required this.imageUrl,
     required this.isVerifiedLead,
     required this.hasRefundGuarantee,
+    this.isBooked = false,
     required this.transportType,
     required this.transportRating,
     required this.stayType,
@@ -68,6 +123,8 @@ class TourModel {
     required this.totalSpots,
     required this.spotsJoined,
     required this.joinDeadline,
+    required this.startDateTime,
+    required this.timeLeft,
     required this.tourLead,
     required this.itinerary,
     required this.included,
@@ -99,6 +156,7 @@ class TourModel {
       'imageUrl': imageUrl,
       'isVerifiedLead': isVerifiedLead,
       'hasRefundGuarantee': hasRefundGuarantee,
+      'isBooked': isBooked,
       'transportType': transportType,
       'transportRating': transportRating,
       'stayType': stayType,
@@ -106,6 +164,8 @@ class TourModel {
       'totalSpots': totalSpots,
       'spotsJoined': spotsJoined,
       'joinDeadline': joinDeadline,
+      'startDateTime': startDateTime,
+      'timeLeft': timeLeft.toJson(),
       'tourLead': tourLead.toJson(),
       'itinerary': itinerary.map((e) => e.toJson()).toList(),
       'included': included,
@@ -132,26 +192,45 @@ class TourModel {
       divisionStr = parts.length > 1 ? parts[1] : locationStr;
     }
 
-    // Parse numeric fields safely
+    // Parse duration from duration_text if available (e.g., "2 Days, 3 Nights")
+    int durationDays = _parseInt(json['duration_days']);
+    int durationNights = _parseInt(json['duration_nights']);
+    
+    final durationText = json['duration_text']?.toString() ?? '';
+    if (durationText.isNotEmpty && (durationDays == 0 || durationNights == 0)) {
+      // Extract numbers from duration_text using regex
+      final daysMatch = RegExp(r'(\d+)\s*Days?', caseSensitive: false).firstMatch(durationText);
+      final nightsMatch = RegExp(r'(\d+)\s*Nights?', caseSensitive: false).firstMatch(durationText);
+      
+      if (daysMatch != null) {
+        durationDays = int.tryParse(daysMatch.group(1) ?? '0') ?? durationDays;
+      }
+      if (nightsMatch != null) {
+        durationNights = int.tryParse(nightsMatch.group(1) ?? '0') ?? durationNights;
+      }
+    }
+
+    // Parse numeric fields safely - use upfront_payment and total_cost from API
     final upcomingPayment = _parseInt(json['upfront_payment'] ?? json['price']);
     final totalCost = _parseInt(json['total_cost'] ?? json['fullCost']);
     
-    return TourModel(
+    final model = TourModel(
       id: json['id']?.toString() ?? '',
       slug: json['slug'] ?? '',
       title: json['title'] ?? '',
       location: locationStr,
       division: divisionStr,
       locationText: locationVal.toString(),
-      durationDays: _parseInt(json['duration_days']),
-      durationNights: _parseInt(json['duration_nights']),
+      durationDays: durationDays,
+      durationNights: durationNights,
       price: upcomingPayment,
       fullCost: totalCost > 0 ? totalCost : (upcomingPayment * 2),
       rating: _parseDouble(json['rating']),
       reviewCount: _parseInt(json['rating_count']),
       imageUrl: json['featured_image'] ?? json['imageUrl'] ?? '',
-      isVerifiedLead: json['is_verified_lead'] ?? false,
-      hasRefundGuarantee: json['has_refund_guarantee'] ?? (json['min_group_size'] != null),
+      isVerifiedLead: _parseBool(json['is_verified_lead']),
+      hasRefundGuarantee: _parseBool(json['has_refund_guarantee'], defaultValue: json['min_group_size'] != null),
+      isBooked: _parseBool(json['is_booked']),
       transportType: transport?['name'] ?? json['transportType'] ?? 'Bus',
       transportRating: _parseDouble(transport?['rating'] ?? json['transportRating']),
       stayType: stay?['name'] ?? json['stayType'] ?? 'Hotel',
@@ -159,9 +238,21 @@ class TourModel {
       totalSpots: _parseInt(json['max_capacity']),
       spotsJoined: _parseInt(json['joined_count'] ?? json['spotsJoined']),
       joinDeadline: json['booking_deadline'] ?? json['start_datetime'] ?? DateTime.now().add(const Duration(days: 30)).toIso8601String(),
-      tourLead: tourLead != null 
-          ? (tourLead is Map<String, dynamic> ? TourLeadModel.fromJson(tourLead) : TourLeadModel.empty())
-          : TourLeadModel.empty(),
+      startDateTime: json['start_datetime'] ?? json['startDateTime'] ?? DateTime.now().add(const Duration(days: 7)).toIso8601String(),
+      timeLeft: TimeLeft.fromJson(json['time_left'] as Map<String, dynamic>?),
+      tourLead: () {
+        print('🔍 tour_lead raw value: $tourLead (type: ${tourLead.runtimeType})');
+        if (tourLead == null) {
+          print('⚠️ tour_lead is null, using empty model');
+          return TourLeadModel.empty();
+        }
+        if (tourLead is Map<String, dynamic>) {
+          print('✅ Parsing tour_lead from Map');
+          return TourLeadModel.fromJson(tourLead);
+        }
+        print('⚠️ tour_lead is not a Map, using empty model');
+        return TourLeadModel.empty();
+      }(),
       itinerary: (json['tour_plan'] as List?)?.map((e) => DayItinerary.fromJson(e as Map<String, dynamic>)).toList() ?? [],
       included: (json['included'] as List?)?.map((e) {
         if (e is String) return e;
@@ -181,6 +272,78 @@ class TourModel {
         description: json['refund_policy_description'] ?? 'Full refund if minimum group size not met',
         minimumGroupSize: _parseInt(json['min_group_size'] ?? 10),
       ),
+    );
+    
+    print('🔍 Parsed TourModel: ${model.title} - Duration: ${model.durationDays}d/${model.durationNights}n, Price: ${model.price}, Total: ${model.fullCost}, TimeLeft: ${model.timeLeft.formattedShort}');
+    
+    return model;
+  }
+
+  TourModel copyWith({
+    String? id,
+    String? slug,
+    String? title,
+    String? location,
+    String? division,
+    String? locationText,
+    int? durationDays,
+    int? durationNights,
+    int? price,
+    int? fullCost,
+    double? rating,
+    int? reviewCount,
+    String? imageUrl,
+    bool? isVerifiedLead,
+    bool? hasRefundGuarantee,
+    bool? isBooked,
+    String? transportType,
+    double? transportRating,
+    String? stayType,
+    double? stayRating,
+    int? totalSpots,
+    int? spotsJoined,
+    String? joinDeadline,
+    String? startDateTime,
+    TimeLeft? timeLeft,
+    TourLeadModel? tourLead,
+    List<DayItinerary>? itinerary,
+    List<String>? included,
+    List<String>? notIncluded,
+    MeetingPointModel? meetingPoint,
+    RefundPolicyModel? refundPolicy,
+  }) {
+    return TourModel(
+      id: id ?? this.id,
+      slug: slug ?? this.slug,
+      title: title ?? this.title,
+      location: location ?? this.location,
+      division: division ?? this.division,
+      locationText: locationText ?? this.locationText,
+      durationDays: durationDays ?? this.durationDays,
+      durationNights: durationNights ?? this.durationNights,
+      price: price ?? this.price,
+      fullCost: fullCost ?? this.fullCost,
+      rating: rating ?? this.rating,
+      reviewCount: reviewCount ?? this.reviewCount,
+      imageUrl: imageUrl ?? this.imageUrl,
+      isVerifiedLead: isVerifiedLead ?? this.isVerifiedLead,
+      hasRefundGuarantee: hasRefundGuarantee ?? this.hasRefundGuarantee,
+      isBooked: isBooked ?? this.isBooked,
+      transportType: transportType ?? this.transportType,
+      transportRating: transportRating ?? this.transportRating,
+      stayType: stayType ?? this.stayType,
+      stayRating: stayRating ?? this.stayRating,
+      totalSpots: totalSpots ?? this.totalSpots,
+      spotsJoined: spotsJoined ?? this.spotsJoined,
+      joinDeadline: joinDeadline ?? this.joinDeadline,
+      startDateTime: startDateTime ?? this.startDateTime,
+      timeLeft: timeLeft ?? this.timeLeft,
+      tourLead: tourLead ?? this.tourLead,
+      itinerary: itinerary ?? this.itinerary,
+      included: included ?? this.included,
+      notIncluded: notIncluded ?? this.notIncluded,
+      meetingPoint: meetingPoint ?? this.meetingPoint,
+      refundPolicy: refundPolicy ?? this.refundPolicy,
     );
   }
 }
@@ -221,13 +384,15 @@ class TourLeadModel {
   }
 
   factory TourLeadModel.fromJson(Map<String, dynamic> json) {
-    return TourLeadModel(
+    final model = TourLeadModel(
       id: json['id'] ?? '',
       name: json['full_name'] ?? json['name'] ?? 'Unknown',
       avatarUrl: json['profile_pic'] ?? json['avatarUrl'] ?? '',
       rating: _parseDouble(json['rating']),
       toursLed: _parseInt(json['tours_completed'] ?? json['toursLed']),
     );
+    print('🧑 Parsed TourLead: ${model.name}, Rating: ${model.rating}, Tours: ${model.toursLed}');
+    return model;
   }
 }
 
@@ -331,6 +496,9 @@ class BookingModel {
   final int pricePaid;
   final String? specialNote;
 
+  final String? bookingReference;
+  final String? message;
+
   BookingModel({
     required this.id,
     required this.tour,
@@ -338,12 +506,65 @@ class BookingModel {
     required this.status,
     required this.pricePaid,
     this.specialNote,
+    this.bookingReference,
+    this.message,
   });
 
   bool get isPast {
-    final tourDate = DateTime.parse(tour.joinDeadline);
+    // If status is completed, it's past
+    if (status.toLowerCase() == 'completed') return true;
+    
+    // Otherwise check date
+    final tourDate = DateTime.tryParse(tour.startDateTime) ?? DateTime.now().add(const Duration(days: 1));
     return tourDate.isBefore(DateTime.now());
   }
 
   bool get isUpcoming => !isPast;
+  
+  factory BookingModel.fromApiJson(Map<String, dynamic> json) {
+    // Construct a partial TourModel from the flattened API response
+    final tour = TourModel(
+      id: '', // Not provided in flattened response
+      slug: json['tour_slug'] ?? '', // Updated to parse tour_slug
+      title: json['tour_title'] ?? '',
+      location: json['location'] ?? '', // Updated to parse location
+      division: '',
+      locationText: json['location'] ?? '',
+      durationDays: 0,
+      durationNights: 0,
+      price: _parseInt(json['price']),
+      fullCost: _parseInt(json['price']), // Assuming just price for now
+      rating: 0.0,
+      reviewCount: 0,
+      imageUrl: json['tour_image'] ?? '',
+      isVerifiedLead: false,
+      hasRefundGuarantee: false,
+      isBooked: true, // Since this is a booking model, the tour is booked
+      transportType: 'Bus',
+      transportRating: 0.0,
+      stayType: 'Hotel',
+      stayRating: 0.0,
+      totalSpots: 0,
+      spotsJoined: 0,
+      joinDeadline: json['start_date'] ?? DateTime.now().toIso8601String(),
+      startDateTime: json['start_date'] ?? DateTime.now().toIso8601String(),
+      timeLeft: TimeLeft(days: 0, hours: 0, minutes: 0),
+      tourLead: TourLeadModel.empty(),
+      itinerary: [],
+      included: [],
+      notIncluded: [],
+      meetingPoint: MeetingPointModel(location: '', time: ''),
+      refundPolicy: RefundPolicyModel.empty(),
+    );
+
+    return BookingModel(
+      id: json['id']?.toString() ?? '',
+      tour: tour,
+      bookingDate: json['start_date'] ?? DateTime.now().toIso8601String(), // Start date as proxy
+      status: json['status'] ?? 'pending',
+      pricePaid: _parseInt(json['price']),
+      bookingReference: json['booking_reference'],
+      message: json['message'],
+    );
+  }
 }

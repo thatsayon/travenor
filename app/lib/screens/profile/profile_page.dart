@@ -258,21 +258,44 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                     const SizedBox(height: 32),
                     
                     // Sign out button
-                    SizedBox(
-                      width: double.infinity,
-                      child: OutlinedButton.icon(
-                        onPressed: () {
-                          ref.read(authProvider.notifier).signOut();
-                          Navigator.of(context).pushNamedAndRemoveUntil(
-                            AppRoutes.signIn,
-                            (route) => false,
-                          );
-                        },
-                        icon: const Icon(Icons.logout),
-                        label: const Text('Sign Out'),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: AppTheme.error,
-                          side: BorderSide(color: AppTheme.error, width: 1.5),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: AppTheme.error.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: AppTheme.error.withValues(alpha: 0.2)),
+                      ),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: () {
+                            ref.read(authProvider.notifier).signOut();
+                            Navigator.of(context).pushNamedAndRemoveUntil(
+                              AppRoutes.signIn,
+                              (route) => false,
+                            );
+                          },
+                          borderRadius: BorderRadius.circular(16),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.logout_rounded,
+                                  color: AppTheme.error,
+                                  size: 22,
+                                ),
+                                const SizedBox(width: 10),
+                                Text(
+                                  'Sign Out',
+                                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                        color: AppTheme.error,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
                       ),
                     ),

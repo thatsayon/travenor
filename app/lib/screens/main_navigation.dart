@@ -7,18 +7,24 @@ import 'profile/profile_page.dart';
 import '../providers/auth_provider.dart';
 
 class MainNavigation extends ConsumerStatefulWidget {
-  const MainNavigation({super.key});
+  final int initialIndex;
+
+  const MainNavigation({
+    super.key, 
+    this.initialIndex = 0,
+  });
 
   @override
   ConsumerState<MainNavigation> createState() => _MainNavigationState();
 }
 
 class _MainNavigationState extends ConsumerState<MainNavigation> {
-  int _currentIndex = 0;
+  late int _currentIndex;
 
   @override
   void initState() {
     super.initState();
+    _currentIndex = widget.initialIndex;
     // Remove splash screen when app is ready
     FlutterNativeSplash.remove();
     

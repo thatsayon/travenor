@@ -49,7 +49,7 @@ class AboutPage extends StatelessWidget {
             const SizedBox(height: 8),
             
             Text(
-              'Version 1.0.0',
+              'Version 1.0.1',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: AppTheme.textSecondary,
                   ),
@@ -96,7 +96,7 @@ class AboutPage extends StatelessWidget {
             
             const SizedBox(height: 32),
             
-           _buildInfoCard(
+            _buildInfoCard(
               context,
               icon: Icons.verified_user,
               title: 'Verified Tour Leads',
@@ -124,7 +124,7 @@ class AboutPage extends StatelessWidget {
             const SizedBox(height: 32),
             
             Text(
-              '© 2024 Travenor. All rights reserved.',
+              '© ${DateTime.now().year} Travenor. All rights reserved.',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: AppTheme.textLight,
                   ),
