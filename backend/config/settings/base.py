@@ -196,25 +196,6 @@ SIMPLE_JWT = {
     "AUTH_HEADER_TYPES": ("Bearer",),
 }
 
-# cloudinary setup
-import cloudinary
-import cloudinary.uploader
-import cloudinary.api
-
-CLOUDINARY_STORAGE = {
-    'CLOUD_NAME': env('CLOUD_NAME'),
-    'API_KEY': env('CLOUDINARY_API_KEY'),
-    'API_SECRET': env('CLOUDINARY_API_SECRET')
-}
-
-cloudinary.config(
-    cloud_name = CLOUDINARY_STORAGE['CLOUD_NAME'], 
-    api_key = CLOUDINARY_STORAGE['API_KEY'], 
-    api_secret = CLOUDINARY_STORAGE['API_SECRET']
-)
-
-
-
 CSRF_COOKIE_SECURE = True
 SESSION_COOKIE_SECURE = True
 
@@ -236,3 +217,20 @@ EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", default=True)
 EMAIL_HOST_USER = env("EMAIL_HOST_USER", default="")
 EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD", default="")
 DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default=EMAIL_HOST_USER)
+
+# cloudinary setup
+import cloudinary
+import cloudinary.uploader
+import cloudinary.api
+
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': env('CLOUD_NAME'),
+    'API_KEY': env('CLOUDINARY_API_KEY'),
+    'API_SECRET': env('CLOUDINARY_API_SECRET')
+}
+
+cloudinary.config(
+    cloud_name = CLOUDINARY_STORAGE['CLOUD_NAME'], 
+    api_key = CLOUDINARY_STORAGE['API_KEY'], 
+    api_secret = CLOUDINARY_STORAGE['API_SECRET']
+)
