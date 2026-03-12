@@ -33,6 +33,8 @@ module.exports = {
             args: "-A config worker --loglevel=info --concurrency=2 -Q celery",
             env: {
                 DJANGO_SETTINGS_MODULE: "config.settings.prod",
+                CELERY_BROKER_URL: "redis://localhost:6379/0",
+                CELERY_RESULT_BACKEND: "redis://localhost:6379/0",
             },
             autorestart: true,
             watch: false,
