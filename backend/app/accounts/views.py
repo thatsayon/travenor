@@ -28,85 +28,66 @@ User = get_user_model()
 
 
 
-def _first_error(serializer):
-    for field, messages in serializer.errors.items():
-        if messages:
-            return messages[0] if isinstance(messages, list) else str(messages)
-    return "Invalid data."
-
-def _create_and_send_otp(user, task, purpose="verify"):
-    otp = generate_otp()
-    OTP.objects.create(user=user, otp=otp, created_at=now())
-    task.delay(user.email, user.full_name, otp)
-    return create_otp_token(user.id)
-
 class RegisterView(generics.CreateAPIView):
-    """
-    Register a new user.
-    Sets the account inactive until OTP verification.
-    If an unverified account already exists for this email,
-    resend the OTP instead of blocking.
-    """
     permission_classes = [permissions.AllowAny]
     serializer_class = RegisterSerializer
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
+        
         if not serializer.is_valid():
-            # Handle unverified duplicate email
-            email = request.data.get("email", "").lower().strip()
-            if email and "email" in serializer.errors:
-                try:
-                    existing = User.objects.get(email=email)
-                    if not existing.is_active:
-                        # Resend OTP for unverified account
-                        from .tasks import send_confirmation_email_task
-                        token = _create_and_send_otp(
-                            existing, send_confirmation_email_task, purpose="verify"
-                        )
-                        return Response(
-                            {
-                                "success": True,
-                                "message": "Account exists but not verified. OTP resent.",
-                                "user": {"id": str(existing.id), "email": existing.email},
-                                "verificationToken": token,
-                            },
-                            status=status.HTTP_200_OK,
-                        )
-                except User.DoesNotExist:
-                    pass
-
+            # Return first error message in standard format
+            errors = serializer.errors
+            first_error = None
+            for field, messages in errors.items():
+                if messages:
+                    if field == 'non_field_errors':
+                        first_error = messages[0] if isinstance(messages, list) else str(messages)
+                    else:
+                        first_error = messages[0] if isinstance(messages, list) else str(messages)
+                    break
             return Response(
-                {"error": _first_error(serializer)},
-                status=status.HTTP_400_BAD_REQUEST,
+                {"error": first_error or "Invalid data."},
+                status=status.HTTP_400_BAD_REQUEST
             )
 
         try:
             with transaction.atomic():
                 user = serializer.save()
 
-                # User must verify email before login
-                user.is_active = False
-                user.save(update_fields=["is_active"])
+                otp = generate_otp()
 
-                from .tasks import send_confirmation_email_task
-                token = _create_and_send_otp(
-                    user, send_confirmation_email_task, purpose="verify"
+                OTP.objects.create(
+                    user=user,
+                    otp=otp,
+                    created_at=now()
                 )
 
-            return Response(
-                {
-                    "success": True,
-                    "message": "Registration successful. OTP sent to email.",
-                    "user": {"id": str(user.id), "email": user.email},
-                    "verificationToken": token,
-                },
-                status=status.HTTP_201_CREATED,
-            )
+                send_confirmation_email_task.delay(
+                    user.email,
+                    user.full_name,
+                    otp
+                )
+
+                verification_token = create_otp_token(user.id)
+
+                return Response(
+                    {
+                        "success": True,
+                        "message": "Registration successful. OTP sent to email.",
+                        "user": {
+                            "id": str(user.id),
+                            "email": user.email,
+                        },
+                        "verificationToken": verification_token,
+                    },
+                    status=status.HTTP_201_CREATED
+                )
+
         except Exception as e:
             return Response(
-                {"error": f"Registration failed: {e}"},
-                status=status.HTTP_400_BAD_REQUEST,
+                {"error": f"Registration failed: {str(e)}"},
+                status=status.HTTP_400_BAD_REQUEST
             )
 
 
