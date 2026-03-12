@@ -487,19 +487,25 @@ class GoogleLoginAPIView(APIView):
                 "full_name": data["full_name"],
                 "auth_provider": AuthProviderChoices.GOOGLE,
                 "google_id": data["google_id"],
-                "profile_pic": data.get("picture"),
             },
         )
-
-        if not created and user.google_id is None:
-            user.google_id = data["google_id"]
-            user.auth_provider = AuthProviderChoices.GOOGLE
-            user.profile_pic = data.get("picture")
-            user.save(update_fields=["google_id", "auth_provider", "profile_pic"])
 
         if created:
             user.set_unusable_password()
             user.save()
+
+        # Sync profile_pic on the UserProfile
+        from app.accounts.models import UserProfile
+        profile, _ = UserProfile.objects.get_or_create(user=user)
+        picture = data.get("picture")
+        if picture and not profile.profile_pic:
+            profile.profile_pic = picture
+            profile.save(update_fields=["profile_pic"])
+
+        if not created and user.google_id is None:
+            user.google_id = data["google_id"]
+            user.auth_provider = AuthProviderChoices.GOOGLE
+            user.save(update_fields=["google_id", "auth_provider"])
 
         tokens = get_tokens_for_user(user)
 

@@ -13,6 +13,9 @@ SECURE_HSTS_SECONDS = 31536000
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
 
+# Email – use real SMTP in production
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,

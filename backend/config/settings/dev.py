@@ -26,4 +26,6 @@ CSRF_TRUSTED_ORIGINS = [
 #     }
 # }
 
+# Emails are printed to the console in development.
+# Switch to smtp.EmailBackend locally if you want to test real sending.
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"

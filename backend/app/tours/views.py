@@ -43,7 +43,8 @@ class TourListView(generics.ListAPIView):
                 is_booked=Exists(
                     TourBooking.objects.filter(
                         tour=OuterRef("pk"),
-                        user=self.request.user
+                        user=self.request.user,
+                        status__in=("pending", "paid"),
                     )
                 )
             )
@@ -80,7 +81,8 @@ class TourDetailView(generics.RetrieveAPIView):
                 is_booked=Exists(
                     TourBooking.objects.filter(
                         tour=OuterRef("pk"),
-                        user=self.request.user
+                        user=self.request.user,
+                        status__in=("pending", "paid"),
                     )
                 )
             )
@@ -97,6 +99,12 @@ class JoinTourView(APIView):
 
         missing = user.missing_booking_fields()
 
+        try:
+            profile = user.profile
+        except Exception:
+            from app.accounts.models import UserProfile
+            profile, _ = UserProfile.objects.get_or_create(user=user)
+
         return Response({
             "tour": {
                 "title": tour.title,
@@ -104,10 +112,10 @@ class JoinTourView(APIView):
             },
             "user_data": {
                 "full_name": user.full_name or "",
-                "mobile_number": user.mobile_number or "",
+                "mobile_number": profile.mobile_number or "",
                 "email": user.email,
-                "emergency_contact_number": user.emergency_contact_number or "",
-                "emergency_contact_relationship": user.emergency_contact_relationship or "",
+                "emergency_contact_number": profile.emergency_contact_number or "",
+                "emergency_contact_relationship": profile.emergency_contact_relationship or "",
             },
             "missing_fields": missing,
             "can_proceed": len(missing) == 0
@@ -123,19 +131,45 @@ class JoinTourView(APIView):
         serializer = JoinTourSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        # Update missing user info
-        for field in user.missing_booking_fields():
+        from app.accounts.models import UserProfile
+        profile, _ = UserProfile.objects.get_or_create(user=user)
+
+        # Update full_name on the account if provided and missing
+        if "full_name" in serializer.validated_data:
+            user.full_name = serializer.validated_data["full_name"]
+            user.save(update_fields=["full_name"])
+
+        # Update profile fields
+        profile_fields = [
+            "mobile_number",
+            "emergency_contact_number",
+            "emergency_contact_relationship",
+        ]
+        profile_updated = False
+        for field in profile_fields:
             if field in serializer.validated_data:
-                setattr(user, field, serializer.validated_data[field])
+                setattr(profile, field, serializer.validated_data[field])
+                profile_updated = True
 
-        user.profile_updated_at = timezone.now()
-        user.save()
+        if profile_updated:
+            profile.profile_updated_at = timezone.now()
+            profile.save()
 
-        booking, _ = TourBooking.objects.get_or_create(
+        # Get or create a draft booking — if one already exists (user went back),
+        # reuse it rather than creating a duplicate.
+        booking, created = TourBooking.objects.get_or_create(
             tour=tour,
             user=user,
             defaults={"status": "draft"}
         )
+
+        # If the booking exists but was cancelled/refunded, reset it to draft
+        if not created and booking.status in ("cancelled", "refunded"):
+            booking.status = "draft"
+            booking.booking_reference = None
+            booking.accepted_terms_at = None
+            booking.confirmed_at = None
+            booking.save()
 
         return Response({
             "booking_id": booking.id,
@@ -153,6 +187,13 @@ class ConfirmBookingInfoView(APIView):
             user=request.user
         )
 
+        user = booking.user
+        try:
+            profile = user.profile
+        except Exception:
+            from app.accounts.models import UserProfile
+            profile, _ = UserProfile.objects.get_or_create(user=user)
+
         return Response({
             "tour": {
                 "title": booking.tour.title,
@@ -160,11 +201,11 @@ class ConfirmBookingInfoView(APIView):
                 "duration_text": booking.tour.duration_text,
             },
             "user": {
-                "full_name": booking.user.full_name,
-                "mobile_number": booking.user.mobile_number,
+                "full_name": user.full_name,
+                "mobile_number": profile.mobile_number,
                 "emergency_contact": (
-                    f"{booking.user.emergency_contact_relationship} - "
-                    f"{booking.user.emergency_contact_number}"
+                    f"{profile.emergency_contact_relationship} - "
+                    f"{profile.emergency_contact_number}"
                 )
             },
             "price_summary": {

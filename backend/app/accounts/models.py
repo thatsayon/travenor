@@ -3,13 +3,15 @@ from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 from cloudinary.models import CloudinaryField
 
 from app.common.models import BaseModel
 from app.common.enums import (
-    GenderChoices, 
-    BloodGroupChoices, 
+    GenderChoices,
+    BloodGroupChoices,
     AuthProviderChoices
 )
 
@@ -42,43 +44,7 @@ class CustomAccountManager(BaseUserManager):
 class UserAccount(BaseModel, AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(_("email address"), unique=True)
     username = models.CharField(_("username"), max_length=30, unique=True)
-
     full_name = models.CharField(_("full name"), max_length=50)
-
-    mobile_number = models.CharField(max_length=20, blank=True, null=True, unique=True)
-    date_of_birth = models.DateField(blank=True, null=True)
-
-    blood_group = models.CharField(
-        max_length=3,
-        choices=BloodGroupChoices.choices,
-        blank=True,
-        null=True,
-    )
-
-    profile_pic = CloudinaryField(blank=True, null=True)
-
-    gender = models.CharField(
-        max_length=10,
-        choices=GenderChoices.choices,
-        blank=True,
-        null=True,
-    )
-
-    present_address = models.TextField(blank=True, null=True)
-
-    emergency_contact_number = models.CharField(
-        max_length=20,
-        blank=True,
-        null=True
-    )
-
-    emergency_contact_relationship = models.CharField(
-        max_length=50,
-        blank=True,
-        null=True
-    )
-
-    profile_updated_at = models.DateTimeField(blank=True, null=True)
 
     auth_provider = models.CharField(
         max_length=20,
@@ -108,21 +74,81 @@ class UserAccount(BaseModel, AbstractBaseUser, PermissionsMixin):
         return self.email
 
     def missing_booking_fields(self):
+        """Check for fields required before booking, delegating to the profile."""
         missing = []
 
         if not self.full_name:
             missing.append("full_name")
 
-        if not self.mobile_number:
+        try:
+            profile = self.profile
+        except UserProfile.DoesNotExist:
+            missing += ["mobile_number", "emergency_contact_number", "emergency_contact_relationship"]
+            return missing
+
+        if not profile.mobile_number:
             missing.append("mobile_number")
 
-        if not self.emergency_contact_number:
+        if not profile.emergency_contact_number:
             missing.append("emergency_contact_number")
 
-        if not self.emergency_contact_relationship:
+        if not profile.emergency_contact_relationship:
             missing.append("emergency_contact_relationship")
 
         return missing
+
+
+class UserProfile(BaseModel):
+    user = models.OneToOneField(
+        UserAccount,
+        on_delete=models.CASCADE,
+        related_name="profile"
+    )
+
+    profile_pic = CloudinaryField(blank=True, null=True)
+
+    mobile_number = models.CharField(max_length=20, blank=True, null=True, unique=True)
+    date_of_birth = models.DateField(blank=True, null=True)
+
+    blood_group = models.CharField(
+        max_length=3,
+        choices=BloodGroupChoices.choices,
+        blank=True,
+        null=True,
+    )
+
+    gender = models.CharField(
+        max_length=10,
+        choices=GenderChoices.choices,
+        blank=True,
+        null=True,
+    )
+
+    present_address = models.TextField(blank=True, null=True)
+
+    emergency_contact_number = models.CharField(
+        max_length=20,
+        blank=True,
+        null=True
+    )
+
+    emergency_contact_relationship = models.CharField(
+        max_length=50,
+        blank=True,
+        null=True
+    )
+
+    profile_updated_at = models.DateTimeField(blank=True, null=True)
+
+    def __str__(self):
+        return f"Profile of {self.user.email}"
+
+
+@receiver(post_save, sender=UserAccount)
+def create_user_profile(sender, instance, created, **kwargs):
+    """Automatically create a UserProfile when a new UserAccount is created."""
+    if created:
+        UserProfile.objects.get_or_create(user=instance)
 
 
 class OTP(BaseModel):

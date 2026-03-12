@@ -166,7 +166,11 @@ class TourGuideSerializer(serializers.ModelSerializer):
         )
 
     def get_profile_pic(self, obj):
-        return obj.user.profile_pic.url if obj.user.profile_pic else None
+        try:
+            pic = obj.user.profile.profile_pic
+            return pic.url if pic else None
+        except Exception:
+            return None
 
 class TourDetailSerializer(serializers.ModelSerializer):
     duration_text = serializers.ReadOnlyField()

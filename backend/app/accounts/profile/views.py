@@ -3,16 +3,24 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 
+from app.accounts.models import UserProfile
+
 from .serializers import (
     ProfileSerializer,
     EditProfileSerializer,
 )
 
+
 class ProfileView(APIView):
     permission_classes = [IsAuthenticated]
 
+    def _get_or_create_profile(self, user):
+        profile, _ = UserProfile.objects.get_or_create(user=user)
+        return profile
+
     def get(self, request):
-        serializer = ProfileSerializer(request.user)
+        profile = self._get_or_create_profile(request.user)
+        serializer = ProfileSerializer(profile)
         return Response(
             {
                 "success": True,
@@ -22,8 +30,9 @@ class ProfileView(APIView):
         )
 
     def patch(self, request):
+        profile = self._get_or_create_profile(request.user)
         serializer = EditProfileSerializer(
-            request.user,
+            profile,
             data=request.data,
             partial=True
         )
