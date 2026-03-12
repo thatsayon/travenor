@@ -15,8 +15,8 @@ module.exports = {
             name: "django",
             cwd: BACKEND,
             interpreter: "none",
-            script: `${BACKEND}/venv/bin/gunicorn`,
-            args: "config.wsgi:application --bind 0.0.0.0:8000 --workers 3",
+            script: `${BACKEND}/venv/bin/uvicorn`,
+            args: "config.asgi:application --host 0.0.0.0 --port 8000 --workers 3",
             env: {
                 DJANGO_SETTINGS_MODULE: "config.settings.prod",
             },
