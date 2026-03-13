@@ -473,6 +473,16 @@ class AuthNotifier extends StateNotifier<AuthState> {
     print('🔄 Access token updated in state');
   }
 
+  /// Clear Profile Photo
+  Future<void> clearProfilePhoto() async {
+    if (state.user != null) {
+      await SecureStorageService.deleteProfilePhoto();
+      final updatedUser = state.user!.copyWith(photoUrl: '');
+      state = state.copyWith(user: updatedUser);
+      print('🗑️ Profile photo cleared from state and storage');
+    }
+  }
+
   /// Clear Error
   void clearError() {
     state = state.copyWith(

@@ -10,20 +10,23 @@ class ProfileApiResponse {
   final String? message;
   final Map<String, dynamic>? userData;
   final String? error;
+  final int? statusCode;
 
   ProfileApiResponse({
     required this.success,
     this.message,
     this.userData,
     this.error,
+    this.statusCode,
   });
 
-  factory ProfileApiResponse.fromJson(Map<String, dynamic> json) {
+  factory ProfileApiResponse.fromJson(Map<String, dynamic> json, [int? statusCode]) {
     return ProfileApiResponse(
       success: json['success'] ?? true,
       message: json['message'],
       userData: json['user'] ?? json,
       error: json['error']?.toString(),
+      statusCode: statusCode,
     );
   }
 }
@@ -136,7 +139,7 @@ class ProfileService {
       final response = await _dioClient.dio.get('/auth/profile/');
       
       if (response.statusCode == 200) {
-        final apiResponse = ProfileApiResponse.fromJson(response.data);
+        final apiResponse = ProfileApiResponse.fromJson(response.data, response.statusCode);
         
         // Cache the profile locally
         if (apiResponse.success && apiResponse.userData != null) {
@@ -156,14 +159,16 @@ class ProfileService {
         return ProfileApiResponse(
           success: false,
           error: 'Profile not found',
+          statusCode: 404,
         );
       }
       if (e.response?.data != null) {
-        return ProfileApiResponse.fromJson(e.response!.data);
+        return ProfileApiResponse.fromJson(e.response!.data, e.response!.statusCode);
       }
       return ProfileApiResponse(
         success: false,
         error: e.message ?? 'Failed to fetch profile',
+        statusCode: e.response?.statusCode,
       );
     }
   }
@@ -180,6 +185,7 @@ class ProfileService {
     String? emergencyContactNumber,
     String? emergencyContactRelationship,
     String? profilePicPath, // Path to profile picture file
+    bool removeProfilePic = false, // Flag to explicitly remove photo
   }) async {
     if (_dioClient == null) {
       return ProfileApiResponse(
@@ -198,7 +204,10 @@ class ProfileService {
         if (mobileNumber != null) 'mobile_number': mobileNumber,
         if (emergencyContactNumber != null) 'emergency_contact_number': emergencyContactNumber,
         if (emergencyContactRelationship != null) 'emergency_contact_relationship': emergencyContactRelationship,
-        if (profilePicPath != null) 'profile_pic': await MultipartFile.fromFile(profilePicPath),
+        if (profilePicPath != null) 
+          'profile_pic': await MultipartFile.fromFile(profilePicPath)
+        else if (removeProfilePic)
+          'profile_pic': '', // Clear photo on backend
       });
 
       final response = await _dioClient.dio.patch(
@@ -208,7 +217,7 @@ class ProfileService {
       
       print('✅ Profile updated successfully: ${response.statusCode}');
       
-      final apiResponse = ProfileApiResponse.fromJson(response.data);
+      final apiResponse = ProfileApiResponse.fromJson(response.data, response.statusCode);
       
       // Update local cache
       if (apiResponse.success && apiResponse.userData != null) {
@@ -219,11 +228,12 @@ class ProfileService {
     } on DioException catch (e) {
       print('❌ Error updating profile: ${e.response?.data}');
       if (e.response?.data != null) {
-        return ProfileApiResponse.fromJson(e.response!.data);
+        return ProfileApiResponse.fromJson(e.response!.data, e.response!.statusCode);
       }
       return ProfileApiResponse(
         success: false,
         error: e.message ?? 'Failed to update profile',
+        statusCode: e.response?.statusCode,
       );
     }
   }

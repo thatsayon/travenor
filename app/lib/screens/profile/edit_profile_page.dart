@@ -72,12 +72,46 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
     
     // Listen for when fresh data arrives
     ref.listen(profileDataProvider, (previous, next) {
-      if (next.hasValue && next.value!.hasData && mounted) {
-        _populateFieldsFromData(next.value!.userData!);
+      if (next.hasValue && mounted) {
+        if (next.value!.hasData) {
+          // Only populate if we aren't currently editing or if it's the first load
+          if (!_hasChanges() || previous == null || !previous.hasValue) {
+            _populateFieldsFromData(next.value!.userData!);
+          }
+        } else if (next.value != null && !next.value!.hasData) {
+          // Confirmed missing (404) - Clear fields
+          _clearFields();
+        }
+        
         setState(() {
           _isLoading = false;
         });
       }
+    });
+  }
+
+  void _clearFields() {
+    setState(() {
+      _fullNameController.clear();
+      _presentAddressController.clear();
+      _phoneController.clear();
+      _emergencyContactController.clear();
+      _emergencyContactRelationController.clear();
+      _selectedGender = null;
+      _selectedDateOfBirth = null;
+      _selectedBloodGroup = null;
+      _profilePicUrl = null;
+      _selectedImageFile = null;
+      
+      // Reset original values
+      _originalFullName = '';
+      _originalPresentAddress = '';
+      _originalPhone = '';
+      _originalEmergencyContact = '';
+      _originalEmergencyContactRelation = '';
+      _originalGender = null;
+      _originalDateOfBirth = null;
+      _originalBloodGroup = null;
     });
   }
 
@@ -137,6 +171,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
       _originalGender = _selectedGender;
       _originalDateOfBirth = _selectedDateOfBirth;
       _originalBloodGroup = _selectedBloodGroup;
+      _originalProfilePicUrl = _profilePicUrl;
     });
     
     // Add listeners to detect changes (only once)
@@ -197,8 +232,12 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
            _selectedGender != _originalGender ||
            _selectedDateOfBirth != _originalDateOfBirth ||
            _selectedBloodGroup != _originalBloodGroup ||
-           _selectedImageFile != null; // Image selected = has changes
+           _selectedImageFile != null ||
+           (_profilePicUrl == '' && _originalProfilePicUrl != null && _originalProfilePicUrl!.isNotEmpty);
   }
+
+  // Store original value for photo
+  String? _originalProfilePicUrl;
 
   // Pick image from gallery
   Future<void> _pickImage() async {
