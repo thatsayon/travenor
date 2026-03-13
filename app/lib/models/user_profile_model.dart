@@ -93,16 +93,17 @@ class UserProfileModel {
 
   // Create from API JSON (snake_case field names)
   factory UserProfileModel.fromApiJson(Map<String, dynamic> json) {
+    final dob = json['date_of_birth'] ?? json['dateOfBirth'];
     return UserProfileModel(
-      fullName: json['full_name'],
-      phoneNumber: json['mobile_number'],
+      fullName: json['full_name'] ?? json['fullName'],
+      phoneNumber: json['mobile_number'] ?? json['phone_number'] ?? json['phoneNumber'],
       email: json['email'],
-      emergencyContact: json['emergency_contact_number'],
+      emergencyContact: json['emergency_contact_number'] ?? json['emergency_contact'] ?? json['emergencyContact'],
       gender: json['gender'],
-      dateOfBirth: json['date_of_birth'] != null ? DateTime.parse(json['date_of_birth']) : null,
-      bloodGroup: json['blood_group'],
-      presentAddress: json['present_address'],
-      emergencyContactRelation: json['emergency_contact_relationship'],
+      dateOfBirth: dob != null ? DateTime.tryParse(dob.toString()) : null,
+      bloodGroup: json['blood_group'] ?? json['bloodGroup'],
+      presentAddress: json['present_address'] ?? json['presentAddress'],
+      emergencyContactRelation: json['emergency_contact_relationship'] ?? json['emergency_contact_relation'] ?? json['emergencyContactRelation'],
       lastUpdated: DateTime.now(),
     );
   }

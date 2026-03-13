@@ -5,6 +5,7 @@ import '../../models/tour_model.dart';
 import '../../models/user_profile_model.dart';
 
 import '../../providers/auth_provider.dart';
+import '../../services/profile_service.dart';
 import '../../services/tour_service.dart';
 import '../profile/terms_of_service_page.dart';
 import 'thank_you_page.dart';
@@ -29,6 +30,37 @@ class _BookingConfirmationPageState extends ConsumerState<BookingConfirmationPag
   // BookingService removed in favor of TourService
   bool _isLoading = false;
   bool _agreedToTerms = false;
+  late UserProfileModel _currentUserProfile;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentUserProfile = widget.userProfile;
+    // Fetch fresh profile data to ensure we have all fields for the confirmation screen
+    _fetchFreshProfile();
+  }
+
+  Future<void> _fetchFreshProfile() async {
+    try {
+      // Small delay to allow backend to finish processing the profile update
+      // and ensure consistency before we fetch the data back.
+      await Future.delayed(const Duration(milliseconds: 500));
+      
+      final dioClient = ref.read(dioClientProvider);
+      final profileService = ProfileService(dioClient);
+      final response = await profileService.getProfileFromApi();
+      
+      if (response.success && response.userData != null && mounted) {
+        print('DEBUG: Fresh profile fetch in confirmation. Data: ${response.userData}');
+        setState(() {
+          _currentUserProfile = UserProfileModel.fromApiJson(response.userData!);
+        });
+        print('DEBUG: Updated local profile state: $_currentUserProfile');
+      }
+    } catch (e) {
+      print('⚠️ Failed to fetch fresh profile in confirmation: $e');
+    }
+  }
 
   Future<void> _handleConfirmBooking() async {
     if (!_agreedToTerms) {
@@ -46,6 +78,7 @@ class _BookingConfirmationPageState extends ConsumerState<BookingConfirmationPag
     try {
       final tourService = ref.read(tourServiceProvider);
 
+      print('🚀 Confirming booking ${widget.bookingId}...');
       final response = await tourService.confirmBooking(
         bookingId: widget.bookingId,
         acceptedTerms: true,
@@ -239,15 +272,15 @@ class _BookingConfirmationPageState extends ConsumerState<BookingConfirmationPag
                           ),
                           child: Column(
                             children: [
-                              _buildDetailRow('Name', widget.userProfile.fullName ?? 'N/A'),
+                              _buildDetailRow('Name', _currentUserProfile.fullName ?? 'N/A'),
                               const Divider(height: 24),
-                              _buildDetailRow('Phone', widget.userProfile.phoneNumber ?? 'N/A'),
-                              if (widget.userProfile.email != null && widget.userProfile.email!.isNotEmpty) ...[
+                              _buildDetailRow('Phone', _currentUserProfile.phoneNumber ?? 'N/A'),
+                              if (_currentUserProfile.email != null && _currentUserProfile.email!.isNotEmpty) ...[
                                 const Divider(height: 24),
-                                _buildDetailRow('Email', widget.userProfile.email!),
+                                _buildDetailRow('Email', _currentUserProfile.email!),
                               ],
                               const Divider(height: 24),
-                              _buildDetailRow('Emergency Contact', widget.userProfile.emergencyContact ?? 'N/A'),
+                              _buildDetailRow('Emergency Contact', _currentUserProfile.emergencyContact ?? 'N/A'),
                             ],
                           ),
                         ),
@@ -406,10 +439,11 @@ class _BookingConfirmationPageState extends ConsumerState<BookingConfirmationPag
                     width: double.infinity,
                     height: 56,
                     child: ElevatedButton(
-                      onPressed: _isLoading ? null : _handleConfirmBooking,
+                      onPressed: (_isLoading || !_agreedToTerms) ? null : _handleConfirmBooking,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppTheme.primaryBlue,
                         foregroundColor: Colors.white,
+                        disabledBackgroundColor: Colors.grey[300],
                         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -428,7 +462,7 @@ class _BookingConfirmationPageState extends ConsumerState<BookingConfirmationPag
                           : Text(
                               'Confirm Booking',
                               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                    color: Colors.white,
+                                    color: (_isLoading || !_agreedToTerms) ? Colors.grey[500] : Colors.white,
                                     fontWeight: FontWeight.w600,
                                   ),
                             ),

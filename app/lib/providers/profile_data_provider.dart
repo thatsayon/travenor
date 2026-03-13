@@ -1,5 +1,4 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../services/profile_service.dart';
 import '../providers/auth_provider.dart';
 
 // Profile data cache with SWR pattern
@@ -28,6 +27,18 @@ class ProfileDataNotifier extends AsyncNotifier<CachedProfileData> {
       final response = await profileService.getProfileFromApi();
       
       if (response.success && response.userData != null) {
+        // Synchronize with AuthProvider to update user name/photo across the app
+        final authNotifier = ref.read(authProvider.notifier);
+        final currentAuth = ref.read(authProvider);
+        if (currentAuth.user != null) {
+          final updatedUser = currentAuth.user!.copyWith(
+            name: response.userData!['full_name'] ?? response.userData!['name'] ?? currentAuth.user!.name,
+            photoUrl: response.userData!['profile_pic'] ?? response.userData!['photoUrl'] ?? currentAuth.user!.photoUrl,
+          );
+          authNotifier.setAuthenticatedUser(updatedUser);
+          print('✅ AuthProvider synchronized with fresh profile data');
+        }
+
         return CachedProfileData(
           userData: response.userData,
           lastFetched: DateTime.now(),

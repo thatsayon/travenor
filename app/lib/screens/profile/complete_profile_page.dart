@@ -6,6 +6,7 @@ import '../../models/tour_model.dart';
 import '../../models/user_profile_model.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/profile_service.dart';
+import '../../providers/profile_data_provider.dart';
 import '../booking/booking_confirmation_page.dart';
 
 class CompleteProfilePage extends ConsumerStatefulWidget {
@@ -170,8 +171,28 @@ class _CompleteProfilePageState extends ConsumerState<CompleteProfilePage> {
 
         if (!mounted) return;
 
-        if (response.success && response.userData != null) {
-          final profile = UserProfileModel.fromApiJson(response.userData!);
+        if (response.success) {
+          print('DEBUG: Profile update success. Response data: ${response.userData}');
+          // Refresh global profile data provider
+          ref.read(profileDataProvider.notifier).refresh();
+          
+          // Construct the model locally to ensure all fields are present, 
+          // as the API response might be partial or have propagation delay.
+          final currentUser = ref.read(authProvider).user;
+          final profile = UserProfileModel(
+            fullName: _fullNameController.text.trim(),
+            phoneNumber: _phoneController.text.trim(),
+            email: currentUser?.email,
+            emergencyContact: _emergencyContactController.text.trim(),
+            gender: _selectedGender?.toLowerCase(),
+            dateOfBirth: _selectedDateOfBirth,
+            bloodGroup: _selectedBloodGroup,
+            presentAddress: _presentAddressController.text.trim(),
+            emergencyContactRelation: _emergencyContactRelationController.text.trim(),
+            isComplete: true, // We successfully updated the profile
+          );
+          
+          print('DEBUG: Constructed profile model locally: $profile');
           
           Navigator.pushReplacement(
             context,
@@ -403,6 +424,10 @@ class _CompleteProfilePageState extends ConsumerState<CompleteProfilePage> {
                                 controller: _emergencyContactController,
                                 hint: 'Phone number',
                                 keyboardType: TextInputType.phone,
+                                inputFormatters: [
+                                  FilteringTextInputFormatter.digitsOnly,
+                                  LengthLimitingTextInputFormatter(11),
+                                ],
                               ),
                               
                               _buildFormField(

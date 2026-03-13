@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
@@ -572,6 +573,10 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                 keyboardType: TextInputType.phone,
                 prefix: '+88',
                 hint: '01XXX-XXXXXX',
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  LengthLimitingTextInputFormatter(11),
+                ],
               ),
               
               // 7. Emergency Contact
@@ -580,6 +585,10 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                 controller: _emergencyContactController,
                 keyboardType: TextInputType.phone,
                 hint: 'Emergency phone number',
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  LengthLimitingTextInputFormatter(11),
+                ],
               ),
               
               // 8. Emergency Contact Relation
@@ -604,6 +613,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
     String? prefix,
     String? hint,
     int maxLines = 1,
+    List<TextInputFormatter>? inputFormatters,
   }) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -628,6 +638,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
               controller: controller,
               keyboardType: keyboardType,
               maxLines: maxLines,
+              inputFormatters: inputFormatters,
               decoration: InputDecoration(
                 contentPadding: const EdgeInsets.symmetric(
                   horizontal: 16,

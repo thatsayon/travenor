@@ -268,7 +268,6 @@ class _SignInPageState extends ConsumerState<SignInPage> {
                                   color: Color(0xFF0D6EFD),
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
-                                  decoration: TextDecoration.underline,
                                 ),
                               ),
                             ),

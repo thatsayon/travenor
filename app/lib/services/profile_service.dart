@@ -150,6 +150,14 @@ class ProfileService {
         error: 'Failed to fetch profile',
       );
     } on DioException catch (e) {
+      if (e.response?.statusCode == 404) {
+        print('⚠️ Profile not found (404). Clearing local cache.');
+        await clearProfile();
+        return ProfileApiResponse(
+          success: false,
+          error: 'Profile not found',
+        );
+      }
       if (e.response?.data != null) {
         return ProfileApiResponse.fromJson(e.response!.data);
       }

@@ -4,6 +4,7 @@ import '../../main.dart';
 import '../../providers/auth_provider.dart';
 import '../../routes/app_routes.dart';
 import 'privacy_policy_page.dart';
+import 'refund_policy_page.dart';
 import 'terms_of_service_page.dart';
 
 class AccountSettingsPage extends ConsumerWidget {
@@ -240,6 +241,23 @@ class AccountSettingsPage extends ConsumerWidget {
                 context,
                 MaterialPageRoute(
                   builder: (context) => const TermsOfServicePage(),
+                ),
+              );
+            },
+          ),
+
+          const SizedBox(height: 8),
+
+          _buildSettingItem(
+            context,
+            icon: Icons.payments_outlined,
+            title: 'Refund Policy',
+            subtitle: 'Read our refund policy',
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const RefundPolicyPage(),
                 ),
               );
             },
