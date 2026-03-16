@@ -8,7 +8,7 @@ class HelpSupportPage extends StatelessWidget {
   Future<void> _launchEmail() async {
     final Uri emailUri = Uri(
       scheme: 'mailto',
-      path: 'support@travenor.com',
+      path: 'support@travenor.org',
     );
     if (await canLaunchUrl(emailUri)) {
       await launchUrl(emailUri);
@@ -17,7 +17,7 @@ class HelpSupportPage extends StatelessWidget {
 
   Future<void> _launchWhatsApp() async {
     // Replace with your business WhatsApp number
-    const phoneNumber = '8801758000666'; // Format: country code + number without +
+    const phoneNumber = '8801540103835'; // Format: country code + number without +
     final Uri whatsappUri = Uri.parse('https://wa.me/$phoneNumber');
     
     if (await canLaunchUrl(whatsappUri)) {
@@ -28,7 +28,7 @@ class HelpSupportPage extends StatelessWidget {
   Future<void> _launchPhone() async {
     final Uri phoneUri = Uri(
       scheme: 'tel',
-      path: '+8801758000666',
+      path: '+8801540103835',
     );
     if (await canLaunchUrl(phoneUri)) {
       await launchUrl(phoneUri);
@@ -93,7 +93,7 @@ class HelpSupportPage extends StatelessWidget {
               context,
               icon: Icons.email_outlined,
               iconColor: AppTheme.primaryBlue,
-              title: 'Mail: support@travenor.com',
+              title: 'Mail: support@travenor.org',
               onTap: _launchEmail,
             ),
             
@@ -124,7 +124,7 @@ class HelpSupportPage extends StatelessWidget {
               context,
               icon: Icons.phone_outlined,
               iconColor: AppTheme.success,
-              title: 'Call us: +880 1758-000666',
+              title: 'Call us: 01540103835',
               onTap: _launchPhone,
             ),
             
@@ -135,7 +135,7 @@ class HelpSupportPage extends StatelessWidget {
               context,
               icon: Icons.chat_bubble_outline,
               iconColor: const Color(0xFF25D366), // WhatsApp green
-              title: 'WhatsApp: +880 1758-000666',
+              title: 'WhatsApp: 01540103835',
               onTap: _launchWhatsApp,
             ),
           ],
