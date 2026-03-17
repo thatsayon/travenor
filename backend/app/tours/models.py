@@ -124,6 +124,21 @@ class Tour(BaseModel):
         return "".join(word[0] for word in words[:3])
 
 
+class TourImage(BaseModel):
+    tour = models.ForeignKey(
+        Tour,
+        on_delete=models.CASCADE,
+        related_name="images"
+    )
+    image = CloudinaryField('image')
+
+    class Meta:
+        ordering = ['id']
+
+    def __str__(self):
+        return f"Image for {self.tour.title}"
+
+
 class TourDay(BaseModel):
     tour = models.ForeignKey(
         Tour,

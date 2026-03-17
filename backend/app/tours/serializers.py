@@ -6,7 +6,7 @@ from django.db.models import Count
 
 from app.guides.models import TourGuide
 
-from .models import Tour, TourDayActivity, TourDay, TourInclusion, TourBooking
+from .models import Tour, TourImage, TourDayActivity, TourDay, TourInclusion, TourBooking
 
 
 class TourListSerializer(serializers.ModelSerializer):
@@ -15,6 +15,7 @@ class TourListSerializer(serializers.ModelSerializer):
     featured_image = serializers.SerializerMethodField()
     location_text = serializers.SerializerMethodField()
     time_left = serializers.SerializerMethodField()
+    images = serializers.SerializerMethodField()
 
     joined_count = serializers.IntegerField(read_only=True)
     progress_percent = serializers.SerializerMethodField()
@@ -35,6 +36,7 @@ class TourListSerializer(serializers.ModelSerializer):
             "title",
             "slug",
             "featured_image",
+            "images",
             "time_left",
             "location_text",
             "duration_text",
@@ -63,6 +65,12 @@ class TourListSerializer(serializers.ModelSerializer):
         if obj.featured_image:
             return obj.featured_image.url
         return None
+
+    def get_images(self, obj):
+        try:
+            return [img.image.url for img in obj.images.all() if img.image]
+        except Exception:
+            return []
 
     def get_location_text(self, obj):
         """
@@ -175,6 +183,7 @@ class TourGuideSerializer(serializers.ModelSerializer):
 class TourDetailSerializer(serializers.ModelSerializer):
     duration_text = serializers.ReadOnlyField()
     featured_image = serializers.SerializerMethodField()
+    images = serializers.SerializerMethodField()
     location_text = serializers.SerializerMethodField()
     time_left = serializers.SerializerMethodField()
 
@@ -213,6 +222,7 @@ class TourDetailSerializer(serializers.ModelSerializer):
             "title",
             "slug",
             "featured_image",
+            "images",
 
             # location & timing
             "location_text",
@@ -262,6 +272,12 @@ class TourDetailSerializer(serializers.ModelSerializer):
 
     def get_featured_image(self, obj):
         return obj.featured_image.url if obj.featured_image else None
+
+    def get_images(self, obj):
+        try:
+            return [img.image.url for img in obj.images.all() if img.image]
+        except Exception:
+            return []
 
     def get_location_text(self, obj):
         parts = [obj.division.name]
