@@ -5,6 +5,7 @@ from app.tours.location.models import Division, District, Upazila
 from app.tours.feedback.models import Transport, Stay
 from .models import (
     Tour, 
+    TourImage,
     TourDay, 
     TourDayActivity, 
     TourReview, 
@@ -41,6 +42,11 @@ class StayAdmin(admin.ModelAdmin):
     list_display = ("name", "is_active")
     list_filter = ("is_active",)
 
+class TourImageInline(nested_admin.NestedTabularInline):
+    model = TourImage
+    extra = 1
+
+
 class TourDayActivityInline(nested_admin.NestedTabularInline):
     model = TourDayActivity
     extra = 1
@@ -67,6 +73,7 @@ class TourAdmin(nested_admin.NestedModelAdmin):
     prepopulated_fields = {"slug": ("title",)}
 
     inlines = [
+        TourImageInline,
         TourDayInline,
         TourInclusionInline,
     ]
