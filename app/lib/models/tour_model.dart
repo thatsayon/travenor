@@ -80,6 +80,7 @@ class TourModel {
   final double rating;
   final int reviewCount;
   final String imageUrl;
+  final List<String> images;
   final bool isVerifiedLead;
   final bool hasRefundGuarantee;
   final bool isBooked;
@@ -113,6 +114,7 @@ class TourModel {
     required this.rating,
     required this.reviewCount,
     required this.imageUrl,
+    required this.images,
     required this.isVerifiedLead,
     required this.hasRefundGuarantee,
     this.isBooked = false,
@@ -154,6 +156,7 @@ class TourModel {
       'rating': rating,
       'reviewCount': reviewCount,
       'imageUrl': imageUrl,
+      'images': images,
       'isVerifiedLead': isVerifiedLead,
       'hasRefundGuarantee': hasRefundGuarantee,
       'isBooked': isBooked,
@@ -214,6 +217,12 @@ class TourModel {
     final upcomingPayment = _parseInt(json['upfront_payment'] ?? json['price']);
     final totalCost = _parseInt(json['total_cost'] ?? json['fullCost']);
     
+    final imageUrl = json['featured_image'] ?? json['imageUrl'] ?? '';
+    final List<String> images = (json['images'] as List?)?.map((e) => e.toString()).toList() ?? [];
+    if (images.isEmpty && imageUrl.isNotEmpty) {
+      images.add(imageUrl);
+    }
+    
     final model = TourModel(
       id: json['id']?.toString() ?? '',
       slug: json['slug'] ?? '',
@@ -227,7 +236,8 @@ class TourModel {
       fullCost: totalCost > 0 ? totalCost : (upcomingPayment * 2),
       rating: _parseDouble(json['rating']),
       reviewCount: _parseInt(json['rating_count']),
-      imageUrl: json['featured_image'] ?? json['imageUrl'] ?? '',
+      imageUrl: imageUrl,
+      images: images,
       isVerifiedLead: _parseBool(json['is_verified_lead']),
       hasRefundGuarantee: _parseBool(json['has_refund_guarantee'], defaultValue: json['min_group_size'] != null),
       isBooked: _parseBool(json['is_booked']),
@@ -293,6 +303,7 @@ class TourModel {
     double? rating,
     int? reviewCount,
     String? imageUrl,
+    List<String>? images,
     bool? isVerifiedLead,
     bool? hasRefundGuarantee,
     bool? isBooked,
@@ -326,6 +337,7 @@ class TourModel {
       rating: rating ?? this.rating,
       reviewCount: reviewCount ?? this.reviewCount,
       imageUrl: imageUrl ?? this.imageUrl,
+      images: images ?? this.images,
       isVerifiedLead: isVerifiedLead ?? this.isVerifiedLead,
       hasRefundGuarantee: hasRefundGuarantee ?? this.hasRefundGuarantee,
       isBooked: isBooked ?? this.isBooked,
@@ -537,6 +549,7 @@ class BookingModel {
       rating: 0.0,
       reviewCount: 0,
       imageUrl: json['tour_image'] ?? '',
+      images: [json['tour_image'] ?? ''],
       isVerifiedLead: false,
       hasRefundGuarantee: false,
       isBooked: true, // Since this is a booking model, the tour is booked

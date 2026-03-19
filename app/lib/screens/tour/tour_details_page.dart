@@ -8,6 +8,7 @@ import '../../services/profile_service.dart';
 import '../../providers/auth_provider.dart';
 import '../profile/complete_profile_page.dart';
 import '../booking/booking_confirmation_page.dart';
+import 'full_screen_gallery.dart';
 
 class TourDetailsPage extends ConsumerStatefulWidget {
   final TourModel tour;
@@ -173,6 +174,12 @@ class _TourDetailsPageState extends ConsumerState<TourDetailsPage> {
                       _buildTourLead(),
                       
                       const SizedBox(height: 24),
+                      
+                      // Gallery
+                      if (_currentTour.images.isNotEmpty) ...[
+                        _buildGallery(),
+                        const SizedBox(height: 24),
+                      ],
                       
                       // Itinerary
                       _buildItinerary(),
@@ -807,6 +814,69 @@ class _TourDetailsPageState extends ConsumerState<TourDetailsPage> {
               ),
             );
           },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildGallery() {
+    final images = _currentTour.images;
+    if (images.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Gallery',
+          style: Theme.of(context).textTheme.headlineSmall,
+        ),
+        const SizedBox(height: 12),
+        SizedBox(
+          height: 120, // thumbnail height
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: images.length,
+            separatorBuilder: (context, index) => const SizedBox(width: 12),
+            itemBuilder: (context, index) {
+              return GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => FullScreenGallery(
+                        images: images,
+                        initialIndex: index,
+                      ),
+                    ),
+                  );
+                },
+                child: Hero(
+                  tag: 'tour_image_$index',
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: CachedNetworkImage(
+                      imageUrl: images[index],
+                      width: 120,
+                      height: 120,
+                      fit: BoxFit.cover,
+                      placeholder: (context, url) => Container(
+                        width: 120,
+                        height: 120,
+                        color: AppTheme.backgroundGray,
+                        child: const Center(child: CircularProgressIndicator()),
+                      ),
+                      errorWidget: (context, url, error) => Container(
+                        width: 120,
+                        height: 120,
+                        color: AppTheme.backgroundGray,
+                        child: const Icon(Icons.image_not_supported),
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
         ),
       ],
     );
