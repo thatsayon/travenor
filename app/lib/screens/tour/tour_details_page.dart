@@ -831,56 +831,189 @@ class _TourDetailsPageState extends ConsumerState<TourDetailsPage> {
           style: Theme.of(context).textTheme.headlineSmall,
         ),
         const SizedBox(height: 12),
-        SizedBox(
-          height: 120, // thumbnail height
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            itemCount: images.length,
-            separatorBuilder: (context, index) => const SizedBox(width: 12),
-            itemBuilder: (context, index) {
-              return GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => FullScreenGallery(
-                        images: images,
-                        initialIndex: index,
-                      ),
-                    ),
-                  );
-                },
-                child: Hero(
-                  tag: 'tour_image_$index',
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: CachedNetworkImage(
-                      imageUrl: images[index],
-                      width: 120,
-                      height: 120,
-                      fit: BoxFit.cover,
-                      placeholder: (context, url) => Container(
-                        width: 120,
-                        height: 120,
-                        color: AppTheme.backgroundGray,
-                        child: const Center(child: CircularProgressIndicator()),
-                      ),
-                      errorWidget: (context, url, error) => Container(
-                        width: 120,
-                        height: 120,
-                        color: AppTheme.backgroundGray,
-                        child: const Icon(Icons.image_not_supported),
-                      ),
+        Builder(
+          builder: (context) {
+            bool showRightArrow = images.length > 2;
+            bool showLeftArrow = false;
+
+            return StatefulBuilder(
+              builder: (context, setState) {
+                return NotificationListener<ScrollUpdateNotification>(
+              onNotification: (ScrollUpdateNotification notification) {
+                final metrics = notification.metrics;
+                final newShowLeftArrow = metrics.pixels > 0;
+                final newShowRightArrow = metrics.pixels < metrics.maxScrollExtent;
+                
+                if (showLeftArrow != newShowLeftArrow || showRightArrow != newShowRightArrow) {
+                  // Only re-build stateful builder if values change
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    setState(() {
+                      showLeftArrow = newShowLeftArrow;
+                      showRightArrow = newShowRightArrow;
+                    });
+                  });
+                }
+                return false;
+              },
+              child: Stack(
+                children: [
+                  SizedBox(
+                    height: 120, // thumbnail height
+                    child: ListView.separated(
+                      clipBehavior: Clip.none,
+                      scrollDirection: Axis.horizontal,
+                      physics: const BouncingScrollPhysics(),
+                      itemCount: images.length,
+                      separatorBuilder: (context, index) => const SizedBox(width: 12),
+                      itemBuilder: (context, index) {
+                        return GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => FullScreenGallery(
+                                  images: images,
+                                  initialIndex: index,
+                                ),
+                              ),
+                            );
+                          },
+                          child: Hero(
+                            tag: 'tour_image_$index',
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(12),
+                              child: CachedNetworkImage(
+                                imageUrl: images[index],
+                                width: 120,
+                                height: 120,
+                                fit: BoxFit.cover,
+                                placeholder: (context, url) => Container(
+                                  width: 120,
+                                  height: 120,
+                                  color: AppTheme.backgroundGray,
+                                  child: const Center(child: CircularProgressIndicator()),
+                                ),
+                                errorWidget: (context, url, error) => Container(
+                                  width: 120,
+                                  height: 120,
+                                  color: AppTheme.backgroundGray,
+                                  child: const Icon(Icons.image_not_supported),
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      },
                     ),
                   ),
-                ),
-              );
-            },
-          ),
-        ),
-      ],
-    );
-  }
+                  
+                  // Left Arrow Overlay
+                  if (showLeftArrow)
+                    Positioned(
+                      left: -20, // Offset to start at edge of the screen since the column has 20 padding
+                      top: 0,
+                      bottom: 0,
+                      child: IgnorePointer(
+                        child: Container(
+                          width: 60,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.centerLeft,
+                              end: Alignment.centerRight,
+                              colors: [
+                                Colors.white.withValues(alpha: 0.95),
+                                Colors.white.withValues(alpha: 0.0),
+                              ],
+                            ),
+                          ),
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: Padding(
+                              padding: const EdgeInsets.only(left: 24),
+                              child: Container(
+                                padding: const EdgeInsets.all(6),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withValues(alpha: 0.12),
+                                      blurRadius: 10,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                    BoxShadow(
+                                      color: Colors.black.withValues(alpha: 0.04),
+                                      blurRadius: 2,
+                                      offset: const Offset(0, 1),
+                                    ),
+                                  ],
+                                ),
+                                child: Icon(Icons.arrow_back_ios_new, color: AppTheme.primaryBlue, size: 14),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    
+                  // Right Arrow Overlay
+                  if (showRightArrow)
+                    Positioned(
+                      right: -20, // Offset to cover the right padding
+                      top: 0,
+                      bottom: 0,
+                      child: IgnorePointer(
+                        child: Container(
+                          width: 60,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.centerRight,
+                              end: Alignment.centerLeft,
+                              colors: [
+                                Colors.white.withValues(alpha: 0.95),
+                                Colors.white.withValues(alpha: 0.0),
+                              ],
+                            ),
+                          ),
+                          child: Align(
+                            alignment: Alignment.centerRight,
+                            child: Padding(
+                              padding: const EdgeInsets.only(right: 24),
+                              child: Container(
+                                padding: const EdgeInsets.all(6),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withValues(alpha: 0.12),
+                                      blurRadius: 10,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                    BoxShadow(
+                                      color: Colors.black.withValues(alpha: 0.04),
+                                      blurRadius: 2,
+                                      offset: const Offset(0, 1),
+                                    ),
+                                  ],
+                                ),
+                                child: Icon(Icons.arrow_forward_ios, color: AppTheme.primaryBlue, size: 14),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    ),
+  ],
+);
+}
 
   Widget _buildIncluded() {
     return Column(
